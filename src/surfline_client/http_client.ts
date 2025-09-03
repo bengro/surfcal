@@ -1,7 +1,8 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
-import { RatingResponse, TideResponse, SunlightResponse, WeatherResponse } from './types';
+import { RatingResponse, TideResponse, SunlightResponse, WeatherResponse, WaveResponse, WindResponse } from './types';
+import { SurflineClient } from './surfline-client';
 
-export class SurflineClient {
+export class SurflineHttpClient implements SurflineClient {
     private httpClient: AxiosInstance;
 
     private accessToken: string | null = null;
@@ -159,6 +160,64 @@ export class SurflineClient {
                 console.error('An unknown error occurred while fetching weather data.');
             }
             throw new Error('Failed to fetch weather data.');
+        }
+    }
+
+    public async getWave(spotId: string, days: number, intervalHours: number): Promise<WaveResponse> {
+        if (!this.accessToken) {
+            throw new Error('You must be logged in to get wave data.');
+        }
+
+        try {
+            const response = await this.httpClient.get<WaveResponse>('/kbyg/spots/forecasts/wave', {
+                params: {
+                    spotId,
+                    days,
+                    intervalHours,
+                    'units[swellHeight]': 'FT',
+                    'units[waveHeight]': 'FT',
+                },
+            });
+            return response.data;
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                const axiosError = error as AxiosError;
+                console.error('Error fetching wave data:', axiosError.response ? axiosError.response.data : axiosError.message);
+            } else if (error instanceof Error) {
+                console.error('Error fetching wave data:', error.message);
+            } else {
+                console.error('An unknown error occurred while fetching wave data.');
+            }
+            throw new Error('Failed to fetch wave data.');
+        }
+    }
+
+    public async getWind(spotId: string, days: number, intervalHours: number): Promise<WindResponse> {
+        if (!this.accessToken) {
+            throw new Error('You must be logged in to get wind data.');
+        }
+
+        try {
+            const response = await this.httpClient.get<WindResponse>('/kbyg/spots/forecasts/wind', {
+                params: {
+                    spotId,
+                    days,
+                    intervalHours,
+                    corrected: true,
+                    'units[windSpeed]': 'KTS',
+                },
+            });
+            return response.data;
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                const axiosError = error as AxiosError;
+                console.error('Error fetching wind data:', axiosError.response ? axiosError.response.data : axiosError.message);
+            } else if (error instanceof Error) {
+                console.error('Error fetching wind data:', error.message);
+            } else {
+                console.error('An unknown error occurred while fetching wind data.');
+            }
+            throw new Error('Failed to fetch wind data.');
         }
     }
 }
