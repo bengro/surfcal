@@ -1,5 +1,4 @@
-
-export interface SurfableTimeWindow {
+export interface SurfableHour {
     startTime: number;
     endTime: number;
     spotId: string;

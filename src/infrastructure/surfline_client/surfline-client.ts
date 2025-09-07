@@ -1,4 +1,4 @@
-import { RatingResponse, TideResponse, SunlightResponse, WeatherResponse, WaveResponse, WindResponse } from './types';
+import { RatingResponse, TideResponse, SunlightResponse, WeatherResponse, SurfResponse, WindResponse } from './types';
 
 export interface SurflineClient {
     login(email: string, password: string): Promise<void>;
@@ -6,6 +6,6 @@ export interface SurflineClient {
     getTides(spotId: string, days: number): Promise<TideResponse>;
     getSunlight(spotId: string, days: number): Promise<SunlightResponse>;
     getWeather(spotId: string, days: number, intervalHours: number): Promise<WeatherResponse>;
-    getWave(spotId: string, days: number, intervalHours: number): Promise<WaveResponse>;
+    getSurf(spotId: string, days: number, intervalHours: number): Promise<SurfResponse>;
     getWind(spotId: string, days: number, intervalHours: number): Promise<WindResponse>;
 }

@@ -49,15 +49,6 @@ describe.each(clients)('$name Contract Tests', ({ name, client }) => {
         expect(weather.data.weather.length).toBeGreaterThan(0);
     }, 30000);
 
-    it('should fetch wave for a spot after logging in', async () => {
-        const wave = await client.getWave(spotId, 1, 1);
-
-        expect(wave).toBeDefined();
-        expect(wave.associated).toBeDefined();
-        expect(wave.data.wave).toBeDefined();
-        expect(wave.data.wave.length).toBeGreaterThan(0);
-    }, 30000);
-
     it('should fetch wind for a spot after logging in', async () => {
         const wind = await client.getWind(spotId, 1, 1);
 

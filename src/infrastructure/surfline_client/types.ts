@@ -82,69 +82,58 @@ export interface SunlightResponse {
 }
 
 export interface WeatherResponse {
-  associated: WeatherAssociated;
-  data: Data;
-  permissions: Permissions;
+    associated: WeatherAssociated;
+    data: Data;
+    permissions: Permissions;
 }
 
 export interface WeatherAssociated {
-  units: Units;
-  utcOffset: number;
-  weatherIconPath: string;
-  runInitializationTimestamp: number;
+    units: Units;
+    utcOffset: number;
+    weatherIconPath: string;
+    runInitializationTimestamp: number;
 }
 
 export interface Units {
-  temperature: string;
+    temperature: string;
 }
 
 export interface Data {
-  sunlightTimes: SunlightTime[];
-  weather: Weather[];
+    sunlightTimes: SunlightTime[];
+    weather: Weather[];
 }
 
 export interface SunlightTime {
-  midnight: number;
-  midnightUTCOffset: number;
-  dawn: number;
-  dawnUTCOffset: number;
-  sunrise: number;
-  sunriseUTCOffset: number;
-  sunset: number;
-  sunsetUTCOffset: number;
-  dusk: number;
-  duskUTCOffset: number;
+    midnight: number;
+    midnightUTCOffset: number;
+    dawn: number;
+    dawnUTCOffset: number;
+    sunrise: number;
+    sunriseUTCOffset: number;
+    sunset: number;
+    sunsetUTCOffset: number;
+    dusk: number;
+    duskUTCOffset: number;
 }
 
 export interface Weather {
-  timestamp: number;
-  utcOffset: number;
-  temperature: number;
-  condition: string;
-  pressure: number;
+    timestamp: number;
+    utcOffset: number;
+    temperature: number;
+    condition: string;
+    pressure: number;
 }
 
 export interface Permissions {
-  data: Datum[];
-  violations: any[];
+    data: Datum[];
+    violations: any[];
 }
 
 export interface Datum {
-  name: string;
-  resource: string;
-  resourceType: string;
-  role: string;
-}
-
-export interface Wave {
-    timestamp: number;
-    utcOffset: number;
-    surf: {
-        min: number;
-        max: number;
-        optimalScore: number;
-    };
-    swells: Swell[];
+    name: string;
+    resource: string;
+    resourceType: string;
+    role: string;
 }
 
 export interface Swell {
@@ -155,13 +144,28 @@ export interface Swell {
     optimalScore: number;
 }
 
-export interface WaveData {
-    wave: Wave[];
+export interface SurfResponse {
+    associated: Associated;
+    data: {
+        surf: SurfData[];
+    }
 }
 
-export interface WaveResponse {
-    associated: Associated;
-    data: WaveData;
+export interface SurfData {
+    "timestamp": number,
+    "utcOffset": number,
+    "surf": Wave
+}
+
+export interface Wave {
+    "min": number,
+    "max": number,
+    "plus": false,
+    "humanRelation": string,
+    "raw": {
+        "min": number,
+        "max": number
+    }
 }
 
 export interface WindResponse {

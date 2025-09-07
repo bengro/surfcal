@@ -1,4 +1,4 @@
-import { Rating, RatingResponse, Sunlight, SunlightResponse, TideResponse, Wave, WaveResponse, WeatherResponse, WindResponse } from './types';
+import { Rating, RatingResponse, Sunlight, SunlightResponse, SurfData, SurfResponse, TideResponse, WeatherResponse, WindResponse } from './types';
 import { SurflineClient } from './surfline-client';
 
 export class SurflineFakeClient implements SurflineClient {
@@ -72,19 +72,6 @@ export class SurflineFakeClient implements SurflineClient {
         },
     };
 
-    private static readonly WAVE_RESPONSE: WaveResponse = {
-        associated: {
-            location: { lon: 0, lat: 0 },
-            runInitializationTimestamp: 1672531200,
-        },
-        data: {
-            wave: [
-                { timestamp: 1672531200, utcOffset: 0, surf: { min: 1.5, max: 2.5, optimalScore: 4 }, swells: [] },
-                { timestamp: 1672534800, utcOffset: 0, surf: { min: 1.4, max: 2.4, optimalScore: 3 }, swells: [] },
-            ],
-        },
-    };
-
     private static readonly WIND_RESPONSE: WindResponse = {
         associated: {
             location: { lon: 0, lat: 0 },
@@ -98,11 +85,22 @@ export class SurflineFakeClient implements SurflineClient {
         },
     };
 
+    private static readonly SURF_RESPONSE: SurfResponse = {
+        associated: {
+            location: { lon: 0, lat: 0 },
+            runInitializationTimestamp: 1672531200,
+        },
+        data: {
+            surf: []
+        }
+    }
+
     private ratingResponse: RatingResponse = SurflineFakeClient.RATING_RESPONSE;
     private sunlightResponse: SunlightResponse = SurflineFakeClient.SUNLIGHT_RESPONSE;
-    private waveResponse: WaveResponse = SurflineFakeClient.WAVE_RESPONSE;
+    private surfResponse: SurfResponse = SurflineFakeClient.SURF_RESPONSE;
 
     private loggedIn = false;
+
 
     public setRatings(ratings: Rating[]): void {
         this.ratingResponse = {
@@ -121,12 +119,11 @@ export class SurflineFakeClient implements SurflineClient {
             },
         };
     }
-
-    public setWave(wave: Wave[]): void {
-        this.waveResponse = {
-            ...SurflineFakeClient.WAVE_RESPONSE,
+    public setSurf(surfData: SurfData[]): void {
+        this.surfResponse = {
+            ...SurflineFakeClient.SURF_RESPONSE,
             data: {
-                wave: wave,
+                surf: surfData,
             },
         };
     }
@@ -165,13 +162,13 @@ export class SurflineFakeClient implements SurflineClient {
         return SurflineFakeClient.WEATHER_RESPONSE;
     }
 
-    public async getWave(spotId: string, days: number, intervalHours: number): Promise<WaveResponse> {
-        this.checkLogin();
-        return this.waveResponse;
-    }
-
     public async getWind(spotId: string, days: number, intervalHours: number): Promise<WindResponse> {
         this.checkLogin();
         return SurflineFakeClient.WIND_RESPONSE;
+    }
+
+    public async getSurf(spotId: string, days: number, intervalHours: number): Promise<SurfResponse> {
+        this.checkLogin();
+        return this.surfResponse;
     }
 }

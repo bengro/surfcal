@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
-import { RatingResponse, TideResponse, SunlightResponse, WeatherResponse, WaveResponse, WindResponse } from './types';
+import { RatingResponse, TideResponse, SunlightResponse, WeatherResponse, SurfResponse, WindResponse } from './types';
 import { SurflineClient } from './surfline-client';
 
 export class SurflineHttpClient implements SurflineClient {
@@ -163,32 +163,32 @@ export class SurflineHttpClient implements SurflineClient {
         }
     }
 
-    public async getWave(spotId: string, days: number, intervalHours: number): Promise<WaveResponse> {
+    public async getSurf(spotId: string, days: number, intervalHours: number): Promise<SurfResponse> {
         if (!this.accessToken) {
             throw new Error('You must be logged in to get wave data.');
         }
 
         try {
-            const response = await this.httpClient.get<WaveResponse>('/kbyg/spots/forecasts/wave', {
+            const response = await this.httpClient.get<SurfResponse>('/kbyg/spots/forecasts/surf', {
                 params: {
                     spotId,
                     days,
                     intervalHours,
-                    'units[swellHeight]': 'FT',
-                    'units[waveHeight]': 'FT',
+                    corrected: true,
+                    'units[surfHeight]': 'FT',
                 },
             });
             return response.data;
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 const axiosError = error as AxiosError;
-                console.error('Error fetching wave data:', axiosError.response ? axiosError.response.data : axiosError.message);
+                console.error('Error fetching surf data:', axiosError.response ? axiosError.response.data : axiosError.message);
             } else if (error instanceof Error) {
-                console.error('Error fetching wave data:', error.message);
+                console.error('Error fetching surf data:', error.message);
             } else {
-                console.error('An unknown error occurred while fetching wave data.');
+                console.error('An unknown error occurred while fetching surf data.');
             }
-            throw new Error('Failed to fetch wave data.');
+            throw new Error('Failed to fetch surf data.');
         }
     }
 
