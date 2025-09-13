@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
+  "bin": {
+    "surfcal": "dist/cli/index.js"
+  },
   "dependencies": {
     "asynckit": "^0.4.0",
     "axios": "^1.11.0",
@@ -41,7 +44,8 @@
     "node": "^18.14.0 || ^20.0.0"
   },
   "scripts": {
-    "start": "tsc && node dist/index.js",
+    "build": "tsc",
+    "start": "npm run build && node dist/cli/index.js",
     "test": "jest"
   },
   "keywords": [],

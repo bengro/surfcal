@@ -9,8 +9,8 @@ export class SurflineFakeClient implements SurflineClient {
         },
         data: {
             rating: [
-                { timestamp: 1672531200, utcOffset: 0, rating: { key: 'GOOD', value: 4 } },
-                { timestamp: 1672534800, utcOffset: 0, rating: { key: 'FAIR', value: 3 } },
+                { timestamp: 1672560000, utcOffset: 0, rating: { key: 'GOOD', value: 4 } }, // Timestamp is now after sunrise
+                { timestamp: 1672563600, utcOffset: 0, rating: { key: 'FAIR', value: 3 } }, // Timestamp is now after sunrise
             ],
         },
     };
@@ -91,7 +91,10 @@ export class SurflineFakeClient implements SurflineClient {
             runInitializationTimestamp: 1672531200,
         },
         data: {
-            surf: []
+            surf: [
+                { timestamp: 1672560000, utcOffset: 0, surf: { min: 2, max: 3, plus: false, humanRelation: 'Waist to chest high', raw: { min: 2, max: 3 } } },
+                { timestamp: 1672563600, utcOffset: 0, surf: { min: 2, max: 3, plus: false, humanRelation: 'Waist to chest high', raw: { min: 2, max: 3 } } },
+            ]
         }
     }
 

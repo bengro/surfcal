@@ -1,4 +1,3 @@
-import { env } from 'yargs';
 import { SurflineHttpClient } from '../infrastructure/surfline_client/http_client';
 import { Rating, Sunlight, RatingInfo, Wave, SurfData, SunlightResponse } from '../infrastructure/surfline_client/types';
 import { SurflineClient } from '../infrastructure/surfline_client/surfline-client';
@@ -13,7 +12,7 @@ const RATING_ORDER: RatingInfo['key'][] = [
     "VERY_GOOD"
 ];
 
-export const getSurfableHours = async (spotIds: string[], client?: SurflineClient, forDays: number = 7): Promise<SurfableHour[]> => {
+export const getSurfableHours = async (spotIds: string[], client?: SurflineClient, forDays: number = 7, now: number = Date.now() / 1000): Promise<SurfableHour[]> => {
     const surfableHours: SurfableHour[] = [];
 
     if (!client) {
@@ -21,23 +20,30 @@ export const getSurfableHours = async (spotIds: string[], client?: SurflineClien
         await client.login(process.env.SURFLINE_EMAIL as string, process.env.SURFLINE_PASSWORD as string);
     }
 
+    // Calculate end time - if forDays is 1, only include hours until end of current day
+    const endTime = forDays === 1 ? getEndOfDay(now) : undefined;
+
     for (const spotId of spotIds) {
         const [ratingsResponse, sunlightResponse, surfResponse] = await getAllSurfData(client, spotId, forDays);
-        const sunlightMap = computeSunlightLookup(sunlightResponse);
 
         for (const hourlyRating of ratingsResponse.data.rating) {
             const timestamp = hourlyRating.timestamp;
-            const day = mapToDayKey(timestamp);
-            const sunlightForDay = sunlightMap.get(day);
+            const sunlightForDay = findSunlightForTimestamp(timestamp, sunlightResponse);
 
-            if (!sunlightForDay) {
-                throw new Error('No sunlight data for the day of timestamp ' + timestamp);
+            if (hourlyRating.timestamp < now) {
+                continue;
+            }
+
+            // If we have an end time (for "today" requests), filter out hours beyond end of day
+            if (endTime && hourlyRating.timestamp >= endTime) {
+                continue;
             }
 
             const surfData = surfResponse.data.surf.find((w: SurfData) => w.timestamp === timestamp);
             const wave = surfData?.surf;
+            const utcOffset = surfData?.utcOffset;
 
-            if (wave && isGoodWaveHeight(wave) && isGoodRating(hourlyRating) && isSunlight(timestamp, sunlightForDay)) {
+            if (wave && isGoodWaveHeight(wave) && isGoodRating(hourlyRating) && sunlightForDay && isSunlight(timestamp, sunlightForDay, utcOffset)) {
                 surfableHours.push({
                     startTime: hourlyRating.timestamp,
                     endTime: hourlyRating.timestamp + 3600,
@@ -57,32 +63,31 @@ const isGoodRating = (rating: Rating): boolean => {
     return ratingIndex >= minRatingIndex;
 }
 
-const isSunlight = (timestamp: number, sunlightForDay: Sunlight): boolean => {
-    const pointInTime = new Date(timestamp * 1000);
-    const sunrise = new Date(sunlightForDay.sunrise * 1000);
-    const sunset = new Date(sunlightForDay.sunset * 1000);
-    const twoHoursBeforeSunset = new Date(sunset.getTime() - (2 * 60 * 60 * 1000));
+const isSunlight = (timestamp: number, sunlightForDay: Sunlight, utcOffset?: number): boolean => {
+    const startTime = timestamp;
+    const endTime = timestamp + 3600;
 
-    return pointInTime >= sunrise && pointInTime <= twoHoursBeforeSunset;
+    const sunrise = sunlightForDay.sunrise + sunlightForDay.sunsetUTCOffset * 3600
+    const sunset = sunlightForDay.sunset + sunlightForDay.sunsetUTCOffset * 3600;
+    const withinApiSunlight = startTime >= sunrise && endTime <= sunset;
+
+    return withinApiSunlight;
 }
 
 const isGoodWaveHeight = (wave: Wave): boolean => {
     return wave.max >= 2;
 }
 
-const mapToDayKey = (timeInDay: number) => {
-    const date = new Date(timeInDay * 1000);
-    const dayString = date.toLocaleDateString('en-US');
-    return dayString;
+const findSunlightForTimestamp = (timestamp: number, sunlightResponse: SunlightResponse): Sunlight | undefined => {
+    return sunlightResponse.data.sunlight.find(sunlight => {
+        return timestamp >= sunlight.midnight && timestamp < (sunlight.midnight + 86400);
+    });
 }
 
-const computeSunlightLookup = (sunlightResponse: SunlightResponse) => {
-    const sunlightMap = new Map<string, Sunlight>();
-    for (const day of sunlightResponse.data.sunlight) {
-        const dayString = mapToDayKey(day.sunrise);
-        sunlightMap.set(dayString, day);
-    }
-    return sunlightMap;
+const getEndOfDay = (timestamp: number): number => {
+    const date = new Date(timestamp * 1000);
+    date.setHours(23, 59, 59, 999); // Set to end of day
+    return Math.floor(date.getTime() / 1000);
 }
 
 const getAllSurfData = async (client: SurflineClient, spotId: string, days: number = 7): Promise<[any, any, any]> => {
@@ -92,4 +97,3 @@ const getAllSurfData = async (client: SurflineClient, spotId: string, days: numb
         client.getSurf(spotId, days, 1),
     ]);
 }
-
