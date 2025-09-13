@@ -38,7 +38,20 @@ const main = async () => {
   }
 
   const args = process.argv.slice(2);
-  const spotId = '584204214e65fad6a7709cef'; // Great Western, Cornwall
+
+  // Parse optional --spot argument
+  let spotId = '';
+  const spotIndex = args.indexOf('--spotId');
+  if (spotIndex !== -1) {
+    if (spotIndex + 1 >= args.length) {
+      console.error('Error: --spotId requires a spotId value.');
+      process.exit(1);
+    }
+    spotId = args[spotIndex + 1];
+    args.splice(spotIndex, 2); // Remove --spot and its value from args
+  } else {
+    throw Error('Error: --spotId argument is required.');
+  }
 
   if (args.includes('--today')) {
     const now = Date.now() / 1000;
@@ -88,7 +101,7 @@ const main = async () => {
     console.log(surfableHoursWithHumanReadableTime);
   } else {
     console.log('Welcome to surfcal!');
-    console.log('Usage: ./surfcal --today | --tomorrow | --on dd/mm/yyyy');
+    console.log('Usage: ./surfcal [--spot spotId] (--today | --tomorrow | --on dd/mm/yyyy)');
   }
 };
 
