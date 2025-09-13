@@ -20,9 +20,6 @@ export const getSurfableHours = async (spotIds: string[], client?: SurflineClien
         await client.login(process.env.SURFLINE_EMAIL as string, process.env.SURFLINE_PASSWORD as string);
     }
 
-    // Calculate end time - if forDays is 1, only include hours until end of current day
-    const endTime = forDays === 1 ? getEndOfDay(now) : undefined;
-
     for (const spotId of spotIds) {
         const [ratingsResponse, sunlightResponse, surfResponse] = await getAllSurfData(client, spotId, forDays);
 
@@ -34,7 +31,7 @@ export const getSurfableHours = async (spotIds: string[], client?: SurflineClien
                 continue;
             }
 
-            // If we have an end time (for "today" requests), filter out hours beyond end of day
+            const endTime = getEndOfDay(now);
             if (endTime && hourlyRating.timestamp >= endTime) {
                 continue;
             }
@@ -43,11 +40,12 @@ export const getSurfableHours = async (spotIds: string[], client?: SurflineClien
             const wave = surfData?.surf;
             const utcOffset = surfData?.utcOffset;
 
-            if (wave && isGoodWaveHeight(wave) && isGoodRating(hourlyRating) && sunlightForDay && isSunlight(timestamp, sunlightForDay, utcOffset)) {
+            if (wave && isMinimumTwoFeet(wave) && isMinimumPoorToFair(hourlyRating) && sunlightForDay && isSunlight(timestamp, sunlightForDay, utcOffset)) {
                 surfableHours.push({
                     startTime: hourlyRating.timestamp,
                     endTime: hourlyRating.timestamp + 3600,
                     spotId,
+                    condition: hourlyRating.rating.key,
                     waveHeight: wave.max,
                 });
             }
@@ -57,7 +55,7 @@ export const getSurfableHours = async (spotIds: string[], client?: SurflineClien
     return surfableHours;
 }
 
-const isGoodRating = (rating: Rating): boolean => {
+const isMinimumPoorToFair = (rating: Rating): boolean => {
     const ratingIndex = RATING_ORDER.indexOf(rating.rating.key);
     const minRatingIndex = RATING_ORDER.indexOf("POOR_TO_FAIR");
     return ratingIndex >= minRatingIndex;
@@ -74,7 +72,7 @@ const isSunlight = (timestamp: number, sunlightForDay: Sunlight, utcOffset?: num
     return withinApiSunlight;
 }
 
-const isGoodWaveHeight = (wave: Wave): boolean => {
+const isMinimumTwoFeet = (wave: Wave): boolean => {
     return wave.max >= 2;
 }
 
