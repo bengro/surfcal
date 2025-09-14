@@ -7,7 +7,7 @@ import {
   SurfData,
   SunlightResponse,
 } from '../infrastructure/surfline_client/types';
-import { SurflineClient } from '../infrastructure/surfline_client/surfline-client';
+import { SurflineClient } from '../infrastructure/surfline_client/surfline_client';
 import { SurfableHour } from './types';
 
 const RATING_ORDER: RatingInfo['key'][] = [
@@ -51,7 +51,7 @@ export const getSurfableHours = async (
       }
 
       // Calculate the end time based on the number of days requested, not just the current day
-      const endTime = now + (forDays * 24 * 60 * 60); // forDays * seconds per day
+      const endTime = now + forDays * 24 * 60 * 60; // forDays * seconds per day
       if (hourlyRating.timestamp >= endTime) {
         continue;
       }

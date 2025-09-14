@@ -10,7 +10,7 @@ import {
   WindResponse,
   SpotResponse,
 } from './types';
-import { SurflineClient } from './surfline-client';
+import { SurflineClient } from './surfline_client';
 
 export class SurflineFakeClient implements SurflineClient {
   private static readonly RATING_RESPONSE: RatingResponse = {
@@ -270,7 +270,7 @@ export class SurflineFakeClient implements SurflineClient {
 
   public async getSpotInfo(spotId: string): Promise<SpotResponse> {
     this.checkLogin();
-    
+
     // Return fake spot info based on popular spot IDs for testing
     const spotNames: { [key: string]: string } = {
       '5842041f4e65fad6a7708876': 'Malibu',
@@ -278,9 +278,9 @@ export class SurflineFakeClient implements SurflineClient {
       '5842041f4e65fad6a770883d': 'Bells Beach',
       '5842041f4e65fad6a7708962': 'Jeffreys Bay',
     };
-    
+
     const spotName = spotNames[spotId] || `Test Spot ${spotId.slice(-4)}`;
-    
+
     return {
       _id: spotId,
       name: spotName,

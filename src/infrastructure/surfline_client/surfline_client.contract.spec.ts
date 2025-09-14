@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { SurflineHttpClient } from './http_client';
 import { SurflineFakeClient } from './fake_client';
-import { SurflineClient } from './surfline-client';
+import { SurflineClient } from './surfline_client';
 
 const email = process.env.SURFLINE_EMAIL as string;
 const password = process.env.SURFLINE_PASSWORD as string;

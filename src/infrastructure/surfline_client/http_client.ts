@@ -8,7 +8,7 @@ import {
   WindResponse,
   SpotResponse,
 } from './types';
-import { SurflineClient } from './surfline-client';
+import { SurflineClient } from './surfline_client';
 
 export class SurflineHttpClient implements SurflineClient {
   private httpClient: AxiosInstance;
@@ -300,15 +300,12 @@ export class SurflineHttpClient implements SurflineClient {
     }
 
     try {
-      const response = await this.httpClient.get<any>(
-        '/kbyg/spots/details',
-        {
-          params: {
-            spotId,
-          },
-        }
-      );
-      
+      const response = await this.httpClient.get<any>('/kbyg/spots/details', {
+        params: {
+          spotId,
+        },
+      });
+
       // Handle the actual Surfline API response structure
       if (response.data && response.data.spot) {
         const spot = response.data.spot;
@@ -320,7 +317,7 @@ export class SurflineHttpClient implements SurflineClient {
           },
         } as SpotResponse;
       }
-      
+
       // Fallback if response structure is unexpected
       throw new Error('Unexpected response structure from Surfline API');
     } catch (error) {
