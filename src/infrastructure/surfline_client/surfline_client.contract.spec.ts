@@ -56,4 +56,21 @@ describe.each(clients)('$name Contract Tests', ({ name, client }) => {
     expect(wind.data.wind).toBeDefined();
     expect(wind.data.wind.length).toBeGreaterThan(0);
   }, 30000);
+
+  it('should fetch spot info for a spot after logging in', async () => {
+    const spotInfo = await client.getSpotInfo(spotId);
+
+    expect(spotInfo).toBeDefined();
+    expect(spotInfo._id).toBeDefined();
+    expect(spotInfo._id).toBe(spotId);
+    expect(spotInfo.name).toBeDefined();
+    expect(typeof spotInfo.name).toBe('string');
+    expect(spotInfo.name.length).toBeGreaterThan(0);
+    expect(spotInfo.location).toBeDefined();
+    expect(spotInfo.location.coordinates).toBeDefined();
+    expect(Array.isArray(spotInfo.location.coordinates)).toBe(true);
+    expect(spotInfo.location.coordinates.length).toBe(2);
+    expect(typeof spotInfo.location.coordinates[0]).toBe('number'); // longitude
+    expect(typeof spotInfo.location.coordinates[1]).toBe('number'); // latitude
+  }, 30000);
 });

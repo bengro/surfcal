@@ -6,6 +6,7 @@ import {
   WeatherResponse,
   SurfResponse,
   WindResponse,
+  SpotResponse,
 } from './types';
 import { SurflineClient } from './surfline-client';
 
@@ -290,6 +291,51 @@ export class SurflineHttpClient implements SurflineClient {
         console.error('An unknown error occurred while fetching wind data.');
       }
       throw new Error('Failed to fetch wind data.');
+    }
+  }
+
+  public async getSpotInfo(spotId: string): Promise<SpotResponse> {
+    if (!this.accessToken) {
+      throw new Error('You must be logged in to get spot information.');
+    }
+
+    try {
+      const response = await this.httpClient.get<any>(
+        '/kbyg/spots/details',
+        {
+          params: {
+            spotId,
+          },
+        }
+      );
+      
+      // Handle the actual Surfline API response structure
+      if (response.data && response.data.spot) {
+        const spot = response.data.spot;
+        return {
+          _id: spotId, // Use the provided spotId since it's not in the response
+          name: spot.name || `Unknown Spot ${spotId.slice(-4)}`,
+          location: {
+            coordinates: spot.location?.coordinates || [0, 0],
+          },
+        } as SpotResponse;
+      }
+      
+      // Fallback if response structure is unexpected
+      throw new Error('Unexpected response structure from Surfline API');
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError;
+        console.error(
+          'Error fetching spot info:',
+          axiosError.response ? axiosError.response.data : axiosError.message,
+        );
+      } else if (error instanceof Error) {
+        console.error('Error fetching spot info:', error.message);
+      } else {
+        console.error('An unknown error occurred while fetching spot info.');
+      }
+      throw new Error('Failed to fetch spot information.');
     }
   }
 }

@@ -2,6 +2,29 @@
 import { getSurfableHours } from '../../domain/get_surfable_hours';
 import { SurflineHttpClient } from '../../infrastructure/surfline_client/http_client';
 
+// Cache for spot names to avoid repeated API calls
+const spotNameCache = new Map<string, string>();
+
+const getSpotName = async (spotId: string, surflineClient: SurflineHttpClient): Promise<string> => {
+  if (spotNameCache.has(spotId)) {
+    return spotNameCache.get(spotId)!;
+  }
+  
+  try {
+    const spotInfo = await surflineClient.getSpotInfo(spotId);
+    const spotName = spotInfo.name;
+    spotNameCache.set(spotId, spotName);
+    return spotName;
+  } catch (error) {
+    console.warn(`Warning: Could not fetch name for spot ${spotId}, using ID instead`);
+    return spotId;
+  }
+};
+
+const formatSpotDisplay = (spotName: string, spotId: string): string => {
+  return spotName === spotId ? spotId : `${spotName} (${spotId})`;
+};
+
 const toHumanReadable = (timestamp: number): string => {
   const date = new Date(timestamp * 1000);
   const weekday = date.toLocaleDateString('en-GB', { weekday: 'long' });
@@ -127,12 +150,14 @@ const main = async () => {
         return acc;
       }, {} as { [spotId: string]: any[] });
 
-      Object.entries(groupedBySpot).forEach(([spotId, hours]) => {
-        console.log(`\n📍 Spot: ${spotId}`);
+      for (const [spotId, hours] of Object.entries(groupedBySpot)) {
+        const spotName = await getSpotName(spotId, surflineClient);
+        const spotDisplay = formatSpotDisplay(spotName, spotId);
+        console.log(`\n📍 Spot: ${spotDisplay}`);
         hours.forEach(hour => {
           console.log(`  🏄 ${hour.humanReadableStartTime} - ${hour.humanReadableEndTime} (${hour.condition}, ${hour.waveHeight}ft)`);
         });
-      });
+      }
     }
   } else if (args.includes('--tomorrow')) {
     const now = Date.now() / 1000;
@@ -165,12 +190,14 @@ const main = async () => {
         return acc;
       }, {} as { [spotId: string]: any[] });
 
-      Object.entries(groupedBySpot).forEach(([spotId, hours]) => {
-        console.log(`\n📍 Spot: ${spotId}`);
+      for (const [spotId, hours] of Object.entries(groupedBySpot)) {
+        const spotName = await getSpotName(spotId, surflineClient);
+        const spotDisplay = formatSpotDisplay(spotName, spotId);
+        console.log(`\n📍 Spot: ${spotDisplay}`);
         hours.forEach(hour => {
           console.log(`  🏄 ${hour.humanReadableStartTime} - ${hour.humanReadableEndTime} (${hour.condition}, ${hour.waveHeight}ft)`);
         });
-      });
+      }
     }
   } else if (args.includes('--on')) {
     const onIndex = args.indexOf('--on');
@@ -216,12 +243,14 @@ const main = async () => {
         return acc;
       }, {} as { [spotId: string]: any[] });
 
-      Object.entries(groupedBySpot).forEach(([spotId, hours]) => {
-        console.log(`\n📍 Spot: ${spotId}`);
+      for (const [spotId, hours] of Object.entries(groupedBySpot)) {
+        const spotName = await getSpotName(spotId, surflineClient);
+        const spotDisplay = formatSpotDisplay(spotName, spotId);
+        console.log(`\n📍 Spot: ${spotDisplay}`);
         hours.forEach(hour => {
           console.log(`  🏄 ${hour.humanReadableStartTime} - ${hour.humanReadableEndTime} (${hour.condition}, ${hour.waveHeight}ft)`);
         });
-      });
+      }
     }
   } else if (args.includes('--week')) {
     const now = Date.now() / 1000;
@@ -254,8 +283,10 @@ const main = async () => {
         return acc;
       }, {} as { [spotId: string]: any[] });
 
-      Object.entries(groupedBySpot).forEach(([spotId, hours]) => {
-        console.log(`📍 Spot: ${spotId}`);
+      for (const [spotId, hours] of Object.entries(groupedBySpot)) {
+        const spotName = await getSpotName(spotId, surflineClient);
+        const spotDisplay = formatSpotDisplay(spotName, spotId);
+        console.log(`📍 Spot: ${spotDisplay}`);
         
         const groupedByDay = groupSurfableHoursByDay(hours);
         
@@ -283,7 +314,7 @@ const main = async () => {
           });
         }
         console.log('');
-      });
+      }
     }
   } else {
     console.log('Welcome to surfcal!');

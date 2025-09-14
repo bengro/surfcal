@@ -16,6 +16,7 @@ import { SurfableHour } from '../../domain/types.js';
 class SurfcalMCPServer {
   private server: Server;
   private surflineClient: SurflineHttpClient | null = null;
+  private spotNameCache = new Map<string, string>();
 
   constructor() {
     this.server = new Server(
@@ -290,7 +291,7 @@ Environment variables required:
       content: [
         {
           type: 'text',
-          text: this.formatSurfableHoursResponse(surfableHours, 'today'),
+          text: await this.formatSurfableHoursResponse(surfableHours, 'today'),
         },
       ],
     };
@@ -314,7 +315,7 @@ Environment variables required:
       content: [
         {
           type: 'text',
-          text: this.formatSurfableHoursResponse(surfableHours, 'tomorrow'),
+          text: await this.formatSurfableHoursResponse(surfableHours, 'tomorrow'),
         },
       ],
     };
@@ -337,7 +338,7 @@ Environment variables required:
       content: [
         {
           type: 'text',
-          text: this.formatSurfableHoursResponse(surfableHours, 'the next 7 days'),
+          text: await this.formatSurfableHoursResponse(surfableHours, 'the next 7 days'),
         },
       ],
     };
@@ -373,18 +374,18 @@ Environment variables required:
       content: [
         {
           type: 'text',
-          text: this.formatSurfableHoursResponse(surfableHours, date),
+          text: await this.formatSurfableHoursResponse(surfableHours, date),
         },
       ],
     };
   }
 
-  private formatSurfableHoursResponse(surfableHours: SurfableHour[], timeframe: string): string {
+  private async formatSurfableHoursResponse(surfableHours: SurfableHour[], timeframe: string): Promise<string> {
     if (surfableHours.length === 0) {
       return `🌊 No surfable hours found for ${timeframe}. The conditions might not be favorable for surfing during this period.`;
     }
 
-    const formattedHours = surfableHours.map((hour) => {
+    const formattedHours = await Promise.all(surfableHours.map(async (hour) => {
       const startTime = new Date(hour.startTime * 1000);
       const endTime = new Date(hour.endTime * 1000);
       
@@ -400,14 +401,18 @@ Environment variables required:
         });
       };
 
+      const spotName = await this.getSpotName(hour.spotId);
+      const spotDisplay = this.formatSpotDisplay(spotName, hour.spotId);
+
       return {
         startTime: formatTime(startTime),
         endTime: formatTime(endTime),
         condition: hour.condition,
         waveHeight: hour.waveHeight,
+        spot: spotDisplay,
         spotId: hour.spotId,
       };
-    });
+    }));
 
     return JSON.stringify({
       timeframe,
@@ -423,6 +428,26 @@ Environment variables required:
     if (isNaN(day) || isNaN(month) || isNaN(year)) return false;
     if (day < 1 || day > 31 || month < 1 || month > 12) return false;
     return true;
+  }
+
+  private async getSpotName(spotId: string): Promise<string> {
+    if (this.spotNameCache.has(spotId)) {
+      return this.spotNameCache.get(spotId)!;
+    }
+    
+    try {
+      const spotInfo = await this.surflineClient!.getSpotInfo(spotId);
+      const spotName = spotInfo.name;
+      this.spotNameCache.set(spotId, spotName);
+      return spotName;
+    } catch (error) {
+      console.error(`Warning: Could not fetch name for spot ${spotId}, using ID instead`);
+      return spotId;
+    }
+  }
+
+  private formatSpotDisplay(spotName: string, spotId: string): string {
+    return spotName === spotId ? spotId : `${spotName} (${spotId})`;
   }
 
   private setupErrorHandling(): void {

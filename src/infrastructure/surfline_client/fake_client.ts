@@ -8,6 +8,7 @@ import {
   TideResponse,
   WeatherResponse,
   WindResponse,
+  SpotResponse,
 } from './types';
 import { SurflineClient } from './surfline-client';
 
@@ -265,5 +266,27 @@ export class SurflineFakeClient implements SurflineClient {
   ): Promise<SurfResponse> {
     this.checkLogin();
     return this.surfResponse;
+  }
+
+  public async getSpotInfo(spotId: string): Promise<SpotResponse> {
+    this.checkLogin();
+    
+    // Return fake spot info based on popular spot IDs for testing
+    const spotNames: { [key: string]: string } = {
+      '5842041f4e65fad6a7708876': 'Malibu',
+      '5842041f4e65fad6a7708815': 'Pipeline',
+      '5842041f4e65fad6a770883d': 'Bells Beach',
+      '5842041f4e65fad6a7708962': 'Jeffreys Bay',
+    };
+    
+    const spotName = spotNames[spotId] || `Test Spot ${spotId.slice(-4)}`;
+    
+    return {
+      _id: spotId,
+      name: spotName,
+      location: {
+        coordinates: [-118.6919, 34.0259], // Malibu coordinates as default
+      },
+    };
   }
 }

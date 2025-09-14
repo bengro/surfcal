@@ -186,3 +186,19 @@ export interface Wind {
   gust: number;
   optimalScore: number;
 }
+
+export interface SpotInfo {
+  _id: string;
+  name: string;
+  location: {
+    coordinates: [number, number];
+  };
+}
+
+export interface SpotResponse {
+  _id: string;
+  name: string;
+  location: {
+    coordinates: [number, number];
+  };
+}
