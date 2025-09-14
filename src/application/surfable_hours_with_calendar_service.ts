@@ -1,4 +1,4 @@
-import { SurfableHour } from '../domain/types';
+import { SurfableHour, SurfCriteria } from '../domain/types';
 import { getSurfableHours } from '../domain/get_surfable_hours';
 import { CalendarFilterService } from '../domain/calendar_filter_service';
 import { SurflineClient } from '../infrastructure/surfline_client/surfline_client';
@@ -9,6 +9,7 @@ export interface SurfableHoursWithCalendarOptions {
   days: number;
   now: number;
   calendarIds?: string[];
+  criteria?: SurfCriteria;
 }
 
 export class SurfableHoursWithCalendarService {
@@ -26,6 +27,7 @@ export class SurfableHoursWithCalendarService {
       this.surflineClient,
       options.days,
       options.now,
+      options.criteria,
     );
 
     // If no calendar filtering is requested, return all surfable hours

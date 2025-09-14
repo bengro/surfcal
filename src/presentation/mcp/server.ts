@@ -11,7 +11,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { getSurfableHours } from '../../domain/get_surfable_hours.js';
 import { SurflineHttpClient } from '../../infrastructure/surfline_client/http_client.js';
-import { SurfableHour } from '../../domain/types.js';
+import { SurfableHour, SurfCriteria } from '../../domain/types.js';
 
 class SurfcalMCPServer {
   private server: Server;
@@ -77,6 +77,16 @@ class SurfcalMCPServer {
                   type: 'string',
                   description: 'The Surfline spot ID to check conditions for',
                 },
+                waveMin: {
+                  type: 'number',
+                  description: 'Minimum wave height in feet (default: 2)',
+                  minimum: 0,
+                },
+                ratingMin: {
+                  type: 'string',
+                  description: 'Minimum surf rating (default: POOR_TO_FAIR)',
+                  enum: ['VERY_POOR', 'POOR', 'POOR_TO_FAIR', 'FAIR', 'GOOD', 'VERY_GOOD'],
+                },
               },
               required: ['spotId'],
             },
@@ -92,6 +102,16 @@ class SurfcalMCPServer {
                   type: 'string',
                   description: 'The Surfline spot ID to check conditions for',
                 },
+                waveMin: {
+                  type: 'number',
+                  description: 'Minimum wave height in feet (default: 2)',
+                  minimum: 0,
+                },
+                ratingMin: {
+                  type: 'string',
+                  description: 'Minimum surf rating (default: POOR_TO_FAIR)',
+                  enum: ['VERY_POOR', 'POOR', 'POOR_TO_FAIR', 'FAIR', 'GOOD', 'VERY_GOOD'],
+                },
               },
               required: ['spotId'],
             },
@@ -106,6 +126,16 @@ class SurfcalMCPServer {
                 spotId: {
                   type: 'string',
                   description: 'The Surfline spot ID to check conditions for',
+                },
+                waveMin: {
+                  type: 'number',
+                  description: 'Minimum wave height in feet (default: 2)',
+                  minimum: 0,
+                },
+                ratingMin: {
+                  type: 'string',
+                  description: 'Minimum surf rating (default: POOR_TO_FAIR)',
+                  enum: ['VERY_POOR', 'POOR', 'POOR_TO_FAIR', 'FAIR', 'GOOD', 'VERY_GOOD'],
                 },
               },
               required: ['spotId'],
@@ -127,6 +157,16 @@ class SurfcalMCPServer {
                   description: 'Date in DD/MM/YYYY format',
                   pattern: '^\\d{2}/\\d{2}/\\d{4}$',
                 },
+                waveMin: {
+                  type: 'number',
+                  description: 'Minimum wave height in feet (default: 2)',
+                  minimum: 0,
+                },
+                ratingMin: {
+                  type: 'string',
+                  description: 'Minimum surf rating (default: POOR_TO_FAIR)',
+                  enum: ['VERY_POOR', 'POOR', 'POOR_TO_FAIR', 'FAIR', 'GOOD', 'VERY_GOOD'],
+                },
               },
               required: ['spotId', 'date'],
             },
@@ -143,18 +183,32 @@ class SurfcalMCPServer {
 
         switch (name) {
           case 'get_surfable_hours_today':
-            return await this.getSurfableHoursToday(args?.spotId as string);
+            return await this.getSurfableHoursToday(
+              args?.spotId as string,
+              args?.waveMin as number,
+              args?.ratingMin as SurfCriteria['minRating'],
+            );
 
           case 'get_surfable_hours_tomorrow':
-            return await this.getSurfableHoursTomorrow(args?.spotId as string);
+            return await this.getSurfableHoursTomorrow(
+              args?.spotId as string,
+              args?.waveMin as number,
+              args?.ratingMin as SurfCriteria['minRating'],
+            );
 
           case 'get_surfable_hours_week':
-            return await this.getSurfableHoursWeek(args?.spotId as string);
+            return await this.getSurfableHoursWeek(
+              args?.spotId as string,
+              args?.waveMin as number,
+              args?.ratingMin as SurfCriteria['minRating'],
+            );
 
           case 'get_surfable_hours_date':
             return await this.getSurfableHoursDate(
               args?.spotId as string,
               args?.date as string,
+              args?.waveMin as number,
+              args?.ratingMin as SurfCriteria['minRating'],
             );
 
           default:
@@ -291,10 +345,19 @@ Environment variables required:
     );
   }
 
-  private async getSurfableHoursToday(spotId: string) {
+  private async getSurfableHoursToday(
+    spotId: string,
+    waveMin?: number,
+    ratingMin?: SurfCriteria['minRating'],
+  ) {
     if (!spotId) {
       throw new McpError(ErrorCode.InvalidParams, 'spotId is required');
     }
+
+    const criteria: SurfCriteria = {
+      minWaveHeight: waveMin ?? 2,
+      minRating: ratingMin ?? 'POOR_TO_FAIR',
+    };
 
     const now = Date.now() / 1000;
     const surfableHours = await getSurfableHours(
@@ -302,6 +365,7 @@ Environment variables required:
       this.surflineClient!,
       1,
       now,
+      criteria,
     );
 
     return {
@@ -314,10 +378,19 @@ Environment variables required:
     };
   }
 
-  private async getSurfableHoursTomorrow(spotId: string) {
+  private async getSurfableHoursTomorrow(
+    spotId: string,
+    waveMin?: number,
+    ratingMin?: SurfCriteria['minRating'],
+  ) {
     if (!spotId) {
       throw new McpError(ErrorCode.InvalidParams, 'spotId is required');
     }
+
+    const criteria: SurfCriteria = {
+      minWaveHeight: waveMin ?? 2,
+      minRating: ratingMin ?? 'POOR_TO_FAIR',
+    };
 
     const now = Date.now() / 1000;
     const tomorrowNow = now + 86400; // Add 24 hours
@@ -326,6 +399,7 @@ Environment variables required:
       this.surflineClient!,
       7,
       tomorrowNow,
+      criteria,
     );
 
     return {
@@ -341,10 +415,19 @@ Environment variables required:
     };
   }
 
-  private async getSurfableHoursWeek(spotId: string) {
+  private async getSurfableHoursWeek(
+    spotId: string,
+    waveMin?: number,
+    ratingMin?: SurfCriteria['minRating'],
+  ) {
     if (!spotId) {
       throw new McpError(ErrorCode.InvalidParams, 'spotId is required');
     }
+
+    const criteria: SurfCriteria = {
+      minWaveHeight: waveMin ?? 2,
+      minRating: ratingMin ?? 'POOR_TO_FAIR',
+    };
 
     const now = Date.now() / 1000;
     const surfableHours = await getSurfableHours(
@@ -352,6 +435,7 @@ Environment variables required:
       this.surflineClient!,
       7,
       now,
+      criteria,
     );
 
     return {
@@ -367,7 +451,12 @@ Environment variables required:
     };
   }
 
-  private async getSurfableHoursDate(spotId: string, date: string) {
+  private async getSurfableHoursDate(
+    spotId: string,
+    date: string,
+    waveMin?: number,
+    ratingMin?: SurfCriteria['minRating'],
+  ) {
     if (!spotId) {
       throw new McpError(ErrorCode.InvalidParams, 'spotId is required');
     }
@@ -382,6 +471,11 @@ Environment variables required:
       );
     }
 
+    const criteria: SurfCriteria = {
+      minWaveHeight: waveMin ?? 2,
+      minRating: ratingMin ?? 'POOR_TO_FAIR',
+    };
+
     const [day, month, year] = date.split('/');
     const targetDate = new Date(
       parseInt(year),
@@ -395,6 +489,7 @@ Environment variables required:
       this.surflineClient!,
       7,
       targetNow,
+      criteria,
     );
 
     return {

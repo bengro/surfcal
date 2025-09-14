@@ -12,6 +12,13 @@ Whether you're chasing dawn patrol sessions, planning weekend surf trips, or com
 - ⚡ Lightning-fast CLI for quick condition checks
 - 🔮 7-day forecasting to plan your entire surf week
 
+Example:
+```
+npx surfcal --spotId 584204214e65fad6a7709cef --spotId 584204204e65fad6a77090bc --spotId 584204204e65fad6a77090bc --week --wave-min 3 --rating-min FAIR
+```
+
+![example.png](example.png)
+
 ## Prerequisites
 
 - Node.js version ^18.14.0 or ^20.0.0
@@ -86,13 +93,16 @@ This project uses Prettier for code formatting. You can check for and fix lintin
 After building, use the CLI tool directly. The tool now supports multiple surf spots and calendar integration for comprehensive condition checking:
 
 ```
-surfcal [--spotId spotId1] [--spotId spotId2] ... [--calendar calendarId1] [--calendar calendarId2] ... [--today | --tomorrow | --week | --on dd/mm/yyyy]
+surfcal [--spotId spotId1] [--spotId spotId2] ... [--calendar calendarId1] [--calendar calendarId2] ... [--wave-min feet] [--rating-min rating] [--today | --tomorrow | --week | --on dd/mm/yyyy]
 ```
 
 ### Available Options
 
 - `--spotId`: Surf spot ID (can be used multiple times for comparing spots)
 - `--calendar`: Google Calendar ID to filter out busy times (can be used multiple times)
+- `--wave-min`: Minimum wave height in feet (default: 2)
+- `--rating-min`: Minimum surf rating (default: POOR_TO_FAIR)
+  - Valid ratings: VERY_POOR, POOR, POOR_TO_FAIR, FAIR, GOOD, VERY_GOOD
 - `--today`: Get surfable hours for today
 - `--tomorrow`: Get surfable hours for tomorrow
 - `--week`: Get surfable hours for the next 7 days
@@ -121,6 +131,30 @@ surfcal [--spotId spotId1] [--spotId spotId2] ... [--calendar calendarId1] [--ca
 4. Get surfable hours for a specific date:
    ```
    surfcal --spotId 5842041f4e65fad6a7708876 --on 15/09/2025
+   ```
+
+### Custom Criteria Examples (NEW!)
+
+The CLI now supports customizable surf criteria to match your preferences and skill level:
+
+1. **Higher wave requirements** (for experienced surfers):
+   ```
+   surfcal --spotId 5842041f4e65fad6a7708876 --wave-min 4 --rating-min GOOD --today
+   ```
+
+2. **Lower wave requirements** (for beginners):
+   ```
+   surfcal --spotId 5842041f4e65fad6a7708876 --wave-min 1.5 --rating-min POOR --today
+   ```
+
+3. **Premium conditions only** (for epic sessions):
+   ```
+   surfcal --spotId 5842041f4e65fad6a7708876 --wave-min 6 --rating-min VERY_GOOD --week
+   ```
+
+4. **Combined with calendar integration**:
+   ```
+   surfcal --spotId 5842041f4e65fad6a7708876 --calendar work@company.com --wave-min 3 --rating-min FAIR --week
    ```
 
 ### Multiple Spot Examples (NEW!)
@@ -348,11 +382,23 @@ The calendar integration feature follows Domain Driven Design principles with a 
 
 ## Surf Condition Filtering
 
-The application filters surf conditions based on:
+The application filters surf conditions based on configurable criteria:
 
-- **Minimum wave height**: 2 feet
-- **Minimum rating**: "Poor to Fair" or better
+- **Minimum wave height**: Configurable via `--wave-min` (default: 2 feet)
+- **Minimum rating**: Configurable via `--rating-min` (default: "Poor to Fair" or better)
 - **Daylight hours only**: Uses sunrise/sunset data to filter conditions
+
+### Customizable Criteria
+
+You can now customize the filtering criteria to match your surfing preferences:
+
+- **Wave Height**: Set minimum wave height from 0.5 to 20+ feet
+- **Surf Rating**: Choose from VERY_POOR, POOR, POOR_TO_FAIR, FAIR, GOOD, VERY_GOOD
+- **Use Cases**:
+  - Beginners: `--wave-min 1 --rating-min POOR`
+  - Intermediate: `--wave-min 2 --rating-min POOR_TO_FAIR` (default)
+  - Advanced: `--wave-min 4 --rating-min GOOD`
+  - Epic sessions only: `--wave-min 6 --rating-min VERY_GOOD`
 
 ## License
 

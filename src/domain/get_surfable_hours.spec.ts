@@ -1,5 +1,6 @@
 import { getSurfableHours } from './get_surfable_hours';
 import { SurflineFakeClient } from '../infrastructure/surfline_client/fake_client';
+import { SurfCriteria } from './types';
 import {
   Rating,
   Sunlight,
@@ -652,5 +653,184 @@ describe('getSurfableHours', () => {
     // This should return empty array because the timestamp is after sunset of current day
     const surfableHours = await getSurfableHours([spotId], client, 1, now);
     expect(surfableHours).toEqual([]);
+  });
+
+  describe('configurable criteria', () => {
+    it('should respect custom minimum wave height', async () => {
+      const spotId = '5842041f4e65fad6a77088ea';
+      const goodTimestamp = 1619863200; // 2021-05-01 10:00:00 UTC
+
+      const client = new SurflineFakeClient();
+      await client.login('email', 'password');
+
+      client.setRatings([
+        { timestamp: goodTimestamp, rating: { key: 'GOOD' } } as Rating,
+      ]);
+      client.setSunlight([
+        {
+          sunrise: 1619852400, // 2021-05-01 07:00:00 UTC
+          sunriseUTCOffset: 0,
+          sunset: 1619895600, // 2021-05-01 19:00:00 UTC
+          sunsetUTCOffset: 0,
+          midnight: 1619823600, // 2021-04-30 23:00:00 UTC
+          midnightUTCOffset: 0,
+          dawn: 1619850000,
+          dawnUTCOffset: 0,
+          dusk: 1619898000,
+          duskUTCOffset: 0,
+        } as Sunlight,
+      ]);
+      client.setSurf([
+        {
+          timestamp: goodTimestamp,
+          utcOffset: 0,
+          surf: {
+            min: 2,
+            max: 2.5, // Wave height is 2.5 feet
+            plus: false,
+            humanRelation: '',
+            raw: { min: 2, max: 2.5 },
+          },
+        } as SurfData,
+      ]);
+
+      // With default criteria (2ft min), should return the hour
+      const defaultCriteria: SurfCriteria = { minWaveHeight: 2, minRating: 'POOR_TO_FAIR' };
+      const surfableHoursDefault = await getSurfableHours(
+        [spotId],
+        client,
+        7,
+        goodTimestamp,
+        defaultCriteria,
+      );
+      expect(surfableHoursDefault).toHaveLength(1);
+
+      // With higher criteria (3ft min), should not return the hour
+      const strictCriteria: SurfCriteria = { minWaveHeight: 3, minRating: 'POOR_TO_FAIR' };
+      const surfableHoursStrict = await getSurfableHours(
+        [spotId],
+        client,
+        7,
+        goodTimestamp,
+        strictCriteria,
+      );
+      expect(surfableHoursStrict).toHaveLength(0);
+    });
+
+    it('should respect custom minimum rating', async () => {
+      const spotId = '5842041f4e65fad6a77088ea';
+      const goodTimestamp = 1619863200; // 2021-05-01 10:00:00 UTC
+
+      const client = new SurflineFakeClient();
+      await client.login('email', 'password');
+
+      client.setRatings([
+        { timestamp: goodTimestamp, rating: { key: 'FAIR' } } as Rating, // Rating is FAIR
+      ]);
+      client.setSunlight([
+        {
+          sunrise: 1619852400, // 2021-05-01 07:00:00 UTC
+          sunriseUTCOffset: 0,
+          sunset: 1619895600, // 2021-05-01 19:00:00 UTC
+          sunsetUTCOffset: 0,
+          midnight: 1619823600, // 2021-04-30 23:00:00 UTC
+          midnightUTCOffset: 0,
+          dawn: 1619850000,
+          dawnUTCOffset: 0,
+          dusk: 1619898000,
+          duskUTCOffset: 0,
+        } as Sunlight,
+      ]);
+      client.setSurf([
+        {
+          timestamp: goodTimestamp,
+          utcOffset: 0,
+          surf: {
+            min: 2,
+            max: 3,
+            plus: false,
+            humanRelation: '',
+            raw: { min: 2, max: 3 },
+          },
+        } as SurfData,
+      ]);
+
+      // With default criteria (POOR_TO_FAIR min), should return the hour
+      const defaultCriteria: SurfCriteria = { minWaveHeight: 2, minRating: 'POOR_TO_FAIR' };
+      const surfableHoursDefault = await getSurfableHours(
+        [spotId],
+        client,
+        7,
+        goodTimestamp,
+        defaultCriteria,
+      );
+      expect(surfableHoursDefault).toHaveLength(1);
+
+      // With higher criteria (GOOD min), should not return the hour
+      const strictCriteria: SurfCriteria = { minWaveHeight: 2, minRating: 'GOOD' };
+      const surfableHoursStrict = await getSurfableHours(
+        [spotId],
+        client,
+        7,
+        goodTimestamp,
+        strictCriteria,
+      );
+      expect(surfableHoursStrict).toHaveLength(0);
+    });
+
+    it('should use default criteria when none provided', async () => {
+      const spotId = '5842041f4e65fad6a77088ea';
+      const goodTimestamp = 1619863200; // 2021-05-01 10:00:00 UTC
+
+      const client = new SurflineFakeClient();
+      await client.login('email', 'password');
+
+      client.setRatings([
+        { timestamp: goodTimestamp, rating: { key: 'POOR_TO_FAIR' } } as Rating,
+      ]);
+      client.setSunlight([
+        {
+          sunrise: 1619852400, // 2021-05-01 07:00:00 UTC
+          sunriseUTCOffset: 0,
+          sunset: 1619895600, // 2021-05-01 19:00:00 UTC
+          sunsetUTCOffset: 0,
+          midnight: 1619823600, // 2021-04-30 23:00:00 UTC
+          midnightUTCOffset: 0,
+          dawn: 1619850000,
+          dawnUTCOffset: 0,
+          dusk: 1619898000,
+          duskUTCOffset: 0,
+        } as Sunlight,
+      ]);
+      client.setSurf([
+        {
+          timestamp: goodTimestamp,
+          utcOffset: 0,
+          surf: {
+            min: 2,
+            max: 2, // Exactly 2 feet (default minimum)
+            plus: false,
+            humanRelation: '',
+            raw: { min: 2, max: 2 },
+          },
+        } as SurfData,
+      ]);
+
+      // Without criteria parameter, should use defaults (2ft, POOR_TO_FAIR)
+      const surfableHours = await getSurfableHours(
+        [spotId],
+        client,
+        7,
+        goodTimestamp,
+      );
+      expect(surfableHours).toHaveLength(1);
+      expect(surfableHours[0]).toEqual({
+        startTime: goodTimestamp,
+        endTime: goodTimestamp + 3600,
+        spotId,
+        waveHeight: 2,
+        condition: 'POOR_TO_FAIR',
+      });
+    });
   });
 });

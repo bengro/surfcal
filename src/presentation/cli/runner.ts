@@ -2,6 +2,7 @@ import { getSurfableHours } from '../../domain/get_surfable_hours';
 import { SurflineClient } from '../../infrastructure/surfline_client/surfline_client';
 import { GoogleCalendarClient } from '../../infrastructure/google_calendar_client/google_calendar_client';
 import { SurfableHoursWithCalendarService } from '../../application/surfable_hours_with_calendar_service';
+import { SurfCriteria } from '../../domain/types';
 
 // Cache for spot names to avoid repeated API calls
 const spotNameCache = new Map<string, string>();
@@ -114,9 +115,11 @@ export const runCLI = async (
     };
 
     try {
-      // Parse multiple --spotId and --calendar arguments
+      // Parse multiple --spotId, --calendar, and surf criteria arguments
       const spotIds: string[] = [];
       const calendarIds: string[] = [];
+      let waveMin: number | undefined;
+      let ratingMin: SurfCriteria['minRating'] | undefined;
       let i = 0;
       while (i < args.length) {
         if (args[i] === '--spotId') {
@@ -139,10 +142,60 @@ export const runCLI = async (
           }
           calendarIds.push(args[i + 1]);
           args.splice(i, 2); // Remove --calendar and its value from args
+        } else if (args[i] === '--wave-min') {
+          if (i + 1 >= args.length || args[i + 1].startsWith('--')) {
+            return {
+              success: false,
+              output: '',
+              error: 'Error: --wave-min requires a numeric value (feet).',
+            };
+          }
+          const waveValue = parseFloat(args[i + 1]);
+          if (isNaN(waveValue) || waveValue < 0) {
+            return {
+              success: false,
+              output: '',
+              error: 'Error: --wave-min must be a positive number.',
+            };
+          }
+          waveMin = waveValue;
+          args.splice(i, 2); // Remove --wave-min and its value from args
+        } else if (args[i] === '--rating-min') {
+          if (i + 1 >= args.length || args[i + 1].startsWith('--')) {
+            return {
+              success: false,
+              output: '',
+              error: 'Error: --rating-min requires a rating value.',
+            };
+          }
+          const ratingValue = args[i + 1].toUpperCase() as SurfCriteria['minRating'];
+          const validRatings: SurfCriteria['minRating'][] = [
+            'VERY_POOR',
+            'POOR',
+            'POOR_TO_FAIR',
+            'FAIR',
+            'GOOD',
+            'VERY_GOOD',
+          ];
+          if (!validRatings.includes(ratingValue)) {
+            return {
+              success: false,
+              output: '',
+              error: `Error: --rating-min must be one of: ${validRatings.join(', ')}.`,
+            };
+          }
+          ratingMin = ratingValue;
+          args.splice(i, 2); // Remove --rating-min and its value from args
         } else {
           i++;
         }
       }
+
+      // Create surf criteria with defaults or user-specified values
+      const criteria: SurfCriteria = {
+        minWaveHeight: waveMin ?? 2,
+        minRating: ratingMin ?? 'POOR_TO_FAIR',
+      };
 
       // Create calendar service if calendar IDs are provided
       const calendarService = new SurfableHoursWithCalendarService(
@@ -161,6 +214,7 @@ export const runCLI = async (
           days,
           now,
           calendarIds: calendarIds.length > 0 ? calendarIds : undefined,
+          criteria,
         });
       };
 
@@ -460,7 +514,7 @@ export const runCLI = async (
       } else {
         console.log('Welcome to surfcal!');
         console.log(
-          'Usage: ./surfcal [--spotId spotId1] [--spotId spotId2] ... [--calendar calendarId1] [--calendar calendarId2] ... (--today | --tomorrow | --week | --on dd/mm/yyyy)',
+          'Usage: ./surfcal [--spotId spotId1] [--spotId spotId2] ... [--calendar calendarId1] [--calendar calendarId2] ... [--wave-min feet] [--rating-min rating] (--today | --tomorrow | --week | --on dd/mm/yyyy)',
         );
         console.log('');
         console.log('Examples:');
@@ -474,7 +528,10 @@ export const runCLI = async (
           '  With calendar:   ./surfcal --spotId 5842041f4e65fad6a7708876 --calendar benjamin.groehbiel@gmail.com --today',
         );
         console.log(
-          '  Multiple cals:   ./surfcal --spotId 5842041f4e65fad6a7708876 --calendar cal1@gmail.com --calendar cal2@gmail.com --week',
+          '  Custom criteria: ./surfcal --spotId 5842041f4e65fad6a7708876 --wave-min 3 --rating-min FAIR --today',
+        );
+        console.log(
+          '  Full example:    ./surfcal --spotId 5842041f4e65fad6a7708876 --calendar cal1@gmail.com --wave-min 4 --rating-min GOOD --week',
         );
         console.log('');
         console.log('Options:');
@@ -484,6 +541,13 @@ export const runCLI = async (
         console.log(
           '  --calendar    Google Calendar ID to filter out busy times (can be used multiple times)',
         );
+        console.log(
+          '  --wave-min    Minimum wave height in feet (default: 2)',
+        );
+        console.log(
+          '  --rating-min  Minimum surf rating (default: POOR_TO_FAIR)',
+        );
+        console.log('                Valid ratings: VERY_POOR, POOR, POOR_TO_FAIR, FAIR, GOOD, VERY_GOOD');
         console.log('  --today       Show surfable hours for today');
         console.log('  --tomorrow    Show surfable hours for tomorrow');
         console.log('  --week        Show surfable hours for the next 7 days');

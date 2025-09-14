@@ -8,7 +8,7 @@ import {
   SunlightResponse,
 } from '../infrastructure/surfline_client/types';
 import { SurflineClient } from '../infrastructure/surfline_client/surfline_client';
-import { SurfableHour } from './types';
+import { SurfableHour, SurfCriteria } from './types';
 
 const RATING_ORDER: RatingInfo['key'][] = [
   'VERY_POOR',
@@ -24,6 +24,7 @@ export const getSurfableHours = async (
   client?: SurflineClient,
   forDays: number = 7,
   now: number = Date.now() / 1000,
+  criteria: SurfCriteria = { minWaveHeight: 2, minRating: 'POOR_TO_FAIR' },
 ): Promise<SurfableHour[]> => {
   const surfableHours: SurfableHour[] = [];
 
@@ -64,8 +65,8 @@ export const getSurfableHours = async (
 
       if (
         wave &&
-        isMinimumTwoFeet(wave) &&
-        isMinimumPoorToFair(hourlyRating) &&
+        isMinimumWaveHeight(wave, criteria.minWaveHeight) &&
+        isMinimumRating(hourlyRating, criteria.minRating) &&
         sunlightForDay &&
         isSunlight(timestamp, sunlightForDay, utcOffset)
       ) {
@@ -83,9 +84,9 @@ export const getSurfableHours = async (
   return surfableHours;
 };
 
-const isMinimumPoorToFair = (rating: Rating): boolean => {
+const isMinimumRating = (rating: Rating, minRating: SurfCriteria['minRating']): boolean => {
   const ratingIndex = RATING_ORDER.indexOf(rating.rating.key);
-  const minRatingIndex = RATING_ORDER.indexOf('POOR_TO_FAIR');
+  const minRatingIndex = RATING_ORDER.indexOf(minRating);
   return ratingIndex >= minRatingIndex;
 };
 
@@ -105,8 +106,8 @@ const isSunlight = (
   return withinApiSunlight;
 };
 
-const isMinimumTwoFeet = (wave: Wave): boolean => {
-  return wave.max >= 2;
+const isMinimumWaveHeight = (wave: Wave, minHeight: number): boolean => {
+  return wave.max >= minHeight;
 };
 
 const findSunlightForTimestamp = (
