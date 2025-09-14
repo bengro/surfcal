@@ -9,84 +9,17 @@ Whether you're chasing dawn patrol sessions, planning weekend surf trips, or com
 - 🌊 Real-time surf condition analysis from Surfline's premium data
 - 📅 Smart calendar integration that shows conflicts without hiding opportunities
 - 🎯 Multi-spot comparisons to find the best waves in your area
-- 🤖 AI-powered session scheduling through MCP integration
-- ⚡ Lightning-fast CLI for quick condition checks
+- ⚙️ Configurable criteria for wave height and surf rating thresholds
+- ☀️ Intelligent filtering to daylight hours only
 - 🔮 7-day forecasting to plan your entire surf week
 
 Example:
 
 ```
-npx surfcal --spotId 584204214e65fad6a7709cef --spotId 584204204e65fad6a77090bc --spotId 584204204e65fad6a77090bc --week --wave-min 3 --rating-min FAIR
+npx surfcal --spotId 584204214e65fad6a7709cef --spotId 584204204e65fad6a77090bc --spotId 584204204e65fad6a77090bc --week --wave-min 3 --rating-min FAIR --calendar personal@gmail.com --calendar work@employer.io
 ```
 
 ![example.png](example.png)
-
-## Prerequisites
-
-- Node.js version ^18.14.0 or ^20.0.0
-- npm (comes with Node.js)
-
-## Setup
-
-1. Clone the repository:
-
-   ```
-   git clone git@github.com:bengro/surfcal.git
-   cd surfcal
-   ```
-
-2. Install dependencies:
-
-   ```
-   npm install
-   ```
-
-3. Set up environment variables:
-   Create a `.env` file in the project root or export the following variables in your shell:
-
-   ```
-   SURFLINE_EMAIL=your_surfline_email@example.com
-   SURFLINE_PASSWORD=your_surfline_password
-   GOOGLE_CALENDAR_API_KEY=your_google_calendar_api_key  # Optional for calendar integration
-   ```
-
-   - `SURFLINE_EMAIL` and `SURFLINE_PASSWORD` are required for authenticating with Surfline's API
-   - `GOOGLE_CALENDAR_API_KEY` is optional and enables calendar integration features
-
-## Build
-
-Compile the TypeScript source code to JavaScript:
-
-```
-npm run build
-```
-
-This generates the `dist/` directory with compiled JavaScript files.
-
-## Test
-
-Run the test suite using Jest:
-
-```
-npm test
-```
-
-This executes all unit tests located in the `src/` directory.
-
-## Linting
-
-This project uses Prettier for code formatting. You can check for and fix linting issues using the following commands:
-
-- To check for linting errors:
-
-  ```
-  npm run lint
-  ```
-
-- To automatically fix linting errors:
-  ```
-  npm run lint:fix
-  ```
 
 ## Usage
 
@@ -104,7 +37,7 @@ surfcal [--spotId spotId1] [--spotId spotId2] ... [--calendar calendarId1] [--ca
 - `--calendar`: Google Calendar ID to filter out busy times (can be used multiple times)
 - `--wave-min`: Minimum wave height in feet (default: 2)
 - `--rating-min`: Minimum surf rating (default: POOR_TO_FAIR)
-  - Valid ratings: VERY_POOR, POOR, POOR_TO_FAIR, FAIR, GOOD, VERY_GOOD
+    - Valid ratings: VERY_POOR, POOR, POOR_TO_FAIR, FAIR, GOOD, VERY_GOOD
 - `--today`: Get surfable hours for today
 - `--tomorrow`: Get surfable hours for tomorrow
 - `--week`: Get surfable hours for the next 7 days
@@ -281,41 +214,86 @@ Surfcal also provides an MCP (Model Context Protocol) server for AI-powered surf
    npm run test:mcp
    ```
 
-#### MCP Integration
-
-The MCP server provides:
-
-- **Tools**: Get surfable hours for today, tomorrow, week, or specific dates
-- **Resources**: Popular surf spots and server information
-- **AI Integration**: Works with Claude Desktop and other MCP-compatible clients
-
-For detailed MCP setup instructions, see [SETUP-GUIDE.md](./SETUP-GUIDE.md).
-
-#### Example AI Queries
-
-Once configured with Claude Desktop, you can ask:
-
-- _"Check surf conditions at Malibu for tomorrow and schedule a 2-hour surf session if conditions are good and I'm free"_
-- _"Look at surf conditions for the next 7 days at California spots and schedule sessions when waves are 3+ feet"_
-- _"Plan my weekend: find the best surf conditions and schedule sessions when I'm available"_
+#### MCP Integration (not verified yet)
 
 #### 🤖 AI Agent Vision: The Future of Intelligent Surf Planning
 
-Surfcal's MCP server is designed with a **separation of concerns** architecture that enables powerful AI agent workflows. Rather than building calendar integration directly into the Surfcal MCP server, we envision AI agents acting as intelligent brokers between specialized MCP servers:
+The goal is to let the agent broker between Surfline and Google Calendar to find the best surf sessions for you.
 
-**🏗️ Modular Architecture:**
-
-- **Surfcal MCP Server**: Pure surf condition data provider (wave heights, conditions, surfable hours)
-- **Google Calendar MCP Server**: Pure calendar data provider (meetings, availability, scheduling)
-- **AI Agent**: Intelligent broker that combines both data sources for smart recommendations
-
-**🧠 Intelligent Brokering Examples:**
+**🧠 Examples:**
 
 - _"There are 4ft waves at Malibu from 2-4pm, but you have a meeting from 3-4pm. Should I reschedule your meeting to catch these epic conditions?"_
 - _"I found perfect dawn patrol conditions at Pipeline tomorrow 6-8am, and your calendar is free. Want me to book travel and block your calendar?"_
 - _"Your usual surf spots are flat this week, but I found firing conditions at Jeffreys Bay. Should I check flight prices and move your meetings?"_
 
 - This architecture keeps Surfcal focused on delivering the best surf forecasting data while enabling limitless AI-powered surf planning possibilities!
+
+## Prerequisites
+
+- Node.js version ^18.14.0 or ^20.0.0
+- npm (comes with Node.js)
+
+## Setup
+
+1. Clone the repository:
+
+   ```
+   git clone git@github.com:bengro/surfcal.git
+   cd surfcal
+   ```
+
+2. Install dependencies:
+
+   ```
+   npm install
+   ```
+
+3. Set up environment variables:
+   Create a `.env` file in the project root or export the following variables in your shell:
+
+   ```
+   SURFLINE_EMAIL=your_surfline_email@example.com
+   SURFLINE_PASSWORD=your_surfline_password
+   GOOGLE_CALENDAR_API_KEY=your_google_calendar_api_key  # Optional for calendar integration
+   ```
+
+   - `SURFLINE_EMAIL` and `SURFLINE_PASSWORD` are required for authenticating with Surfline's API
+   - `GOOGLE_CALENDAR_API_KEY` is optional and enables calendar integration features
+
+## Build
+
+Compile the TypeScript source code to JavaScript:
+
+```
+npm run build
+```
+
+This generates the `dist/` directory with compiled JavaScript files.
+
+## Test
+
+Run the test suite using Jest:
+
+```
+npm test
+```
+
+This executes all unit tests located in the `src/` directory.
+
+## Linting
+
+This project uses Prettier for code formatting. You can check for and fix linting issues using the following commands:
+
+- To check for linting errors:
+
+  ```
+  npm run lint
+  ```
+
+- To automatically fix linting errors:
+  ```
+  npm run lint:fix
+  ```
 
 ## Available Scripts
 
@@ -327,90 +305,10 @@ Surfcal's MCP server is designed with a **separation of concerns** architecture 
 - `npm run lint` - Check code formatting
 - `npm run lint:fix` - Fix code formatting issues
 
-## Project Structure
-
-The project follows clean architecture principles with a clear separation of concerns:
-
-```
-src/
-├── application/           # Application services (NEW!)
-│   └── surfable_hours_with_calendar_service.ts
-├── domain/                # Core business logic
-│   ├── get_surfable_hours.ts
-│   ├── calendar_filter_service.ts
-│   └── types.ts
-├── infrastructure/        # External service integrations
-│   ├── surfline_client/  # Surfline API client
-│   └── google_calendar_client/ # Google Calendar API client
-└── presentation/         # User interfaces
-    ├── cli/             # Command-line interface
-    │   ├── index.ts
-    │   └── runner.ts
-    └── mcp/             # Model Context Protocol server
-        └── server.ts
-```
-
-### Key Components
-
-- **Application Layer**: Application services that orchestrate domain and infrastructure components
-- **Domain Layer**: Contains the core surf condition logic and calendar filtering rules
-- **Infrastructure Layer**: Handles external API integrations (Surfline, Google Calendar)
-- **Presentation Layer**: Provides user interfaces (CLI and MCP server)
-
-## Calendar Integration Architecture
-
-The calendar integration feature follows Domain Driven Design principles with a clean separation of concerns:
-
-### Application Services
-
-- **SurfableHoursWithCalendarService**: Orchestrates the combination of Surfline data with Google Calendar conflict marking
-- Handles optional calendar integration and graceful fallback when calendar API is unavailable
-
-### Domain Services
-
-- **CalendarFilterService**: Pure domain logic for marking surfable hours with calendar conflicts
-- Uses time range overlap detection to identify conflicts between surf sessions and calendar events
-- No external dependencies - purely business logic
-
-### Infrastructure Integration
-
-- **GoogleCalendarClient**: Interface for Google Calendar API integration
-- **GoogleCalendarHttpClient**: HTTP implementation for production use
-- **GoogleCalendarFakeClient**: Test implementation for reliable testing
-
-### Key Features
-
-- **Smart Conflict Detection**: Marks surfable hours that overlap with calendar events using precise time range logic
-- **Complete Information**: Shows ALL surfable hours with clear visual indicators for conflicts
-- **Multiple Calendar Support**: Can check conflicts against multiple calendars simultaneously (work + personal)
-- **Informed Decision Making**: Users can see great surf conditions and decide if they're worth rescheduling meetings
-- **Graceful Degradation**: Works without calendar integration for backward compatibility
-- **Enhanced Visual Feedback**: Clear emoji and text indicators for conflicted vs. available times
-
-## Surf Condition Filtering
-
-The application filters surf conditions based on configurable criteria:
-
-- **Minimum wave height**: Configurable via `--wave-min` (default: 2 feet)
-- **Minimum rating**: Configurable via `--rating-min` (default: "Poor to Fair" or better)
-- **Daylight hours only**: Uses sunrise/sunset data to filter conditions
-
-### Customizable Criteria
-
-You can now customize the filtering criteria to match your surfing preferences:
-
-- **Wave Height**: Set minimum wave height from 0.5 to 20+ feet
-- **Surf Rating**: Choose from VERY_POOR, POOR, POOR_TO_FAIR, FAIR, GOOD, VERY_GOOD
-- **Use Cases**:
-  - Beginners: `--wave-min 1 --rating-min POOR`
-  - Intermediate: `--wave-min 2 --rating-min POOR_TO_FAIR` (default)
-  - Advanced: `--wave-min 4 --rating-min GOOD`
-  - Epic sessions only: `--wave-min 6 --rating-min VERY_GOOD`
-
 ## License
 
 ISC
 
 ## Disclaimer
 
-This project was predominantly written by Cline and Gemini.
+This project was predominantly written by Cline/Gemini and Windsurf/Claude.
