@@ -10,22 +10,26 @@ Surfcal is a command-line tool that integrates with Surfline to fetch surfable h
 ## Setup
 
 1. Clone the repository:
+
    ```
    git clone git@github.com:bengro/surfcal.git
    cd surfcal
    ```
 
 2. Install dependencies:
+
    ```
    npm install
    ```
 
 3. Set up environment variables:
    Create a `.env` file in the project root or export the following variables in your shell:
+
    ```
    SURFLINE_EMAIL=your_surfline_email@example.com
    SURFLINE_PASSWORD=your_surfline_password
    ```
+
    These are required for authenticating with Surfline's API.
 
    Note: Depending on your setup, you may also need Google Calendar credentials if extending functionality to calendar integration.
@@ -33,18 +37,36 @@ Surfcal is a command-line tool that integrates with Surfline to fetch surfable h
 ## Build
 
 Compile the TypeScript source code to JavaScript:
+
 ```
 npm run build
 ```
+
 This generates the `dist/` directory with compiled JavaScript files.
 
 ## Test
 
 Run the test suite using Jest:
+
 ```
 npm test
 ```
+
 This executes all unit tests located in the `src/` directory.
+
+## Linting
+
+This project uses Prettier for code formatting. You can check for and fix linting issues using the following commands:
+
+- To check for linting errors:
+  ```
+  npm run lint
+  ```
+
+- To automatically fix linting errors:
+  ```
+  npm run lint:fix
+  ```
 
 ## Usage
 
@@ -57,11 +79,13 @@ surfcal --spotId <spotId> [--today | --tomorrow | --on dd/mm/yyyy]
 ### Examples
 
 1. Get surfable hours for today:
+
    ```
    surfcal --spotId 584204214e65fad6a7709cef --today
    ```
 
 2. Get surfable hours for tomorrow:
+
    ```
    surfcal --spotId 584204214e65fad6a7709cef --tomorrow
    ```

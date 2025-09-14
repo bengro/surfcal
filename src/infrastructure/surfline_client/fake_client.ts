@@ -1,177 +1,269 @@
-import { Rating, RatingResponse, Sunlight, SunlightResponse, SurfData, SurfResponse, TideResponse, WeatherResponse, WindResponse } from './types';
+import {
+  Rating,
+  RatingResponse,
+  Sunlight,
+  SunlightResponse,
+  SurfData,
+  SurfResponse,
+  TideResponse,
+  WeatherResponse,
+  WindResponse,
+} from './types';
 import { SurflineClient } from './surfline-client';
 
 export class SurflineFakeClient implements SurflineClient {
-    private static readonly RATING_RESPONSE: RatingResponse = {
-        associated: {
-            location: { lon: 0, lat: 0 },
-            runInitializationTimestamp: 1672531200,
+  private static readonly RATING_RESPONSE: RatingResponse = {
+    associated: {
+      location: { lon: 0, lat: 0 },
+      runInitializationTimestamp: 1672531200,
+    },
+    data: {
+      rating: [
+        {
+          timestamp: 1672560000,
+          utcOffset: 0,
+          rating: { key: 'GOOD', value: 4 },
+        }, // Timestamp is now after sunrise
+        {
+          timestamp: 1672563600,
+          utcOffset: 0,
+          rating: { key: 'FAIR', value: 3 },
+        }, // Timestamp is now after sunrise
+      ],
+    },
+  };
+
+  private static readonly TIDE_RESPONSE: TideResponse = {
+    associated: {
+      utcOffset: 0,
+      units: { tideHeight: 'M' },
+      tideLocation: {
+        name: 'Test Spot',
+        min: 0,
+        max: 2,
+        lon: 0,
+        lat: 0,
+        mean: 1,
+      },
+    },
+    data: {
+      tides: [
+        { timestamp: 1672531200, utcOffset: 0, type: 'HIGH', height: 1.8 },
+        { timestamp: 1672552800, utcOffset: 0, type: 'LOW', height: 0.4 },
+      ],
+    },
+  };
+
+  private static readonly SUNLIGHT_RESPONSE: SunlightResponse = {
+    associated: {
+      location: { lon: 0, lat: 0 },
+      runInitializationTimestamp: 1672531200,
+    },
+    data: {
+      sunlight: [
+        {
+          midnight: 1672531200,
+          midnightUTCOffset: 0,
+          dawn: 1672552800,
+          dawnUTCOffset: 0,
+          sunrise: 1672556400,
+          sunriseUTCOffset: 0,
+          sunset: 1672596000,
+          sunsetUTCOffset: 0,
+          dusk: 1672599600,
+          duskUTCOffset: 0,
         },
-        data: {
-            rating: [
-                { timestamp: 1672560000, utcOffset: 0, rating: { key: 'GOOD', value: 4 } }, // Timestamp is now after sunrise
-                { timestamp: 1672563600, utcOffset: 0, rating: { key: 'FAIR', value: 3 } }, // Timestamp is now after sunrise
-            ],
+      ],
+    },
+  };
+
+  private static readonly WEATHER_RESPONSE: WeatherResponse = {
+    associated: {
+      units: { temperature: 'C' },
+      utcOffset: 0,
+      weatherIconPath: '',
+      runInitializationTimestamp: 1672531200,
+    },
+    data: {
+      sunlightTimes: [],
+      weather: [
+        {
+          timestamp: 1672531200,
+          utcOffset: 0,
+          temperature: 22,
+          condition: 'CLEAR',
+          pressure: 1012,
         },
+        {
+          timestamp: 1672534800,
+          utcOffset: 0,
+          temperature: 21,
+          condition: 'CLEAR',
+          pressure: 1013,
+        },
+      ],
+    },
+    permissions: {
+      data: [],
+      violations: [],
+    },
+  };
+
+  private static readonly WIND_RESPONSE: WindResponse = {
+    associated: {
+      location: { lon: 0, lat: 0 },
+      runInitializationTimestamp: 1672531200,
+    },
+    data: {
+      wind: [
+        {
+          timestamp: 1672531200,
+          utcOffset: 0,
+          speed: 12,
+          direction: 180,
+          directionType: 'ONSHORE',
+          gust: 18,
+          optimalScore: 2,
+        },
+        {
+          timestamp: 1672534800,
+          utcOffset: 0,
+          speed: 10,
+          direction: 190,
+          directionType: 'ONSHORE',
+          gust: 15,
+          optimalScore: 3,
+        },
+      ],
+    },
+  };
+
+  private static readonly SURF_RESPONSE: SurfResponse = {
+    associated: {
+      location: { lon: 0, lat: 0 },
+      runInitializationTimestamp: 1672531200,
+    },
+    data: {
+      surf: [
+        {
+          timestamp: 1672560000,
+          utcOffset: 0,
+          surf: {
+            min: 2,
+            max: 3,
+            plus: false,
+            humanRelation: 'Waist to chest high',
+            raw: { min: 2, max: 3 },
+          },
+        },
+        {
+          timestamp: 1672563600,
+          utcOffset: 0,
+          surf: {
+            min: 2,
+            max: 3,
+            plus: false,
+            humanRelation: 'Waist to chest high',
+            raw: { min: 2, max: 3 },
+          },
+        },
+      ],
+    },
+  };
+
+  private ratingResponse: RatingResponse = SurflineFakeClient.RATING_RESPONSE;
+  private sunlightResponse: SunlightResponse =
+    SurflineFakeClient.SUNLIGHT_RESPONSE;
+  private surfResponse: SurfResponse = SurflineFakeClient.SURF_RESPONSE;
+
+  private loggedIn = false;
+
+  public setRatings(ratings: Rating[]): void {
+    this.ratingResponse = {
+      ...SurflineFakeClient.RATING_RESPONSE,
+      data: {
+        rating: ratings,
+      },
     };
+  }
 
-    private static readonly TIDE_RESPONSE: TideResponse = {
-        associated: {
-            utcOffset: 0,
-            units: { tideHeight: 'M' },
-            tideLocation: { name: 'Test Spot', min: 0, max: 2, lon: 0, lat: 0, mean: 1 },
-        },
-        data: {
-            tides: [
-                { timestamp: 1672531200, utcOffset: 0, type: 'HIGH', height: 1.8 },
-                { timestamp: 1672552800, utcOffset: 0, type: 'LOW', height: 0.4 },
-            ],
-        },
+  public setSunlight(sunlight: Sunlight[]): void {
+    this.sunlightResponse = {
+      ...SurflineFakeClient.SUNLIGHT_RESPONSE,
+      data: {
+        sunlight: sunlight,
+      },
     };
-
-    private static readonly SUNLIGHT_RESPONSE: SunlightResponse = {
-        associated: {
-            location: { lon: 0, lat: 0 },
-            runInitializationTimestamp: 1672531200,
-        },
-        data: {
-            sunlight: [
-                {
-                    midnight: 1672531200,
-                    midnightUTCOffset: 0,
-                    dawn: 1672552800,
-                    dawnUTCOffset: 0,
-                    sunrise: 1672556400,
-                    sunriseUTCOffset: 0,
-                    sunset: 1672596000,
-                    sunsetUTCOffset: 0,
-                    dusk: 1672599600,
-                    duskUTCOffset: 0,
-                },
-            ],
-        },
+  }
+  public setSurf(surfData: SurfData[]): void {
+    this.surfResponse = {
+      ...SurflineFakeClient.SURF_RESPONSE,
+      data: {
+        surf: surfData,
+      },
     };
+  }
 
-    private static readonly WEATHER_RESPONSE: WeatherResponse = {
-        associated: {
-            units: { temperature: 'C' },
-            utcOffset: 0,
-            weatherIconPath: '',
-            runInitializationTimestamp: 1672531200,
-        },
-        data: {
-            sunlightTimes: [],
-            weather: [
-                { timestamp: 1672531200, utcOffset: 0, temperature: 22, condition: 'CLEAR', pressure: 1012 },
-                { timestamp: 1672534800, utcOffset: 0, temperature: 21, condition: 'CLEAR', pressure: 1013 },
-            ],
-        },
-        permissions: {
-            data: [],
-            violations: [],
-        },
-    };
-
-    private static readonly WIND_RESPONSE: WindResponse = {
-        associated: {
-            location: { lon: 0, lat: 0 },
-            runInitializationTimestamp: 1672531200,
-        },
-        data: {
-            wind: [
-                { timestamp: 1672531200, utcOffset: 0, speed: 12, direction: 180, directionType: 'ONSHORE', gust: 18, optimalScore: 2 },
-                { timestamp: 1672534800, utcOffset: 0, speed: 10, direction: 190, directionType: 'ONSHORE', gust: 15, optimalScore: 3 },
-            ],
-        },
-    };
-
-    private static readonly SURF_RESPONSE: SurfResponse = {
-        associated: {
-            location: { lon: 0, lat: 0 },
-            runInitializationTimestamp: 1672531200,
-        },
-        data: {
-            surf: [
-                { timestamp: 1672560000, utcOffset: 0, surf: { min: 2, max: 3, plus: false, humanRelation: 'Waist to chest high', raw: { min: 2, max: 3 } } },
-                { timestamp: 1672563600, utcOffset: 0, surf: { min: 2, max: 3, plus: false, humanRelation: 'Waist to chest high', raw: { min: 2, max: 3 } } },
-            ]
-        }
+  public async login(email: string, password: string): Promise<void> {
+    if (email && password) {
+      this.loggedIn = true;
+    } else {
+      throw new Error('FakeSurflineClient: Login failed.');
     }
+  }
 
-    private ratingResponse: RatingResponse = SurflineFakeClient.RATING_RESPONSE;
-    private sunlightResponse: SunlightResponse = SurflineFakeClient.SUNLIGHT_RESPONSE;
-    private surfResponse: SurfResponse = SurflineFakeClient.SURF_RESPONSE;
-
-    private loggedIn = false;
-
-
-    public setRatings(ratings: Rating[]): void {
-        this.ratingResponse = {
-            ...SurflineFakeClient.RATING_RESPONSE,
-            data: {
-                rating: ratings,
-            },
-        };
+  private checkLogin(): void {
+    if (!this.loggedIn) {
+      throw new Error('You must be logged in.');
     }
+  }
 
-    public setSunlight(sunlight: Sunlight[]): void {
-        this.sunlightResponse = {
-            ...SurflineFakeClient.SUNLIGHT_RESPONSE,
-            data: {
-                sunlight: sunlight,
-            },
-        };
-    }
-    public setSurf(surfData: SurfData[]): void {
-        this.surfResponse = {
-            ...SurflineFakeClient.SURF_RESPONSE,
-            data: {
-                surf: surfData,
-            },
-        };
-    }
+  public async getRatings(
+    spotId: string,
+    days: number,
+    intervalHours: number,
+  ): Promise<RatingResponse> {
+    this.checkLogin();
+    return this.ratingResponse;
+  }
 
-    public async login(email: string, password: string): Promise<void> {
-        if (email && password) {
-            this.loggedIn = true;
-        } else {
-            throw new Error('FakeSurflineClient: Login failed.');
-        }
-    }
+  public async getTides(spotId: string, days: number): Promise<TideResponse> {
+    this.checkLogin();
+    return SurflineFakeClient.TIDE_RESPONSE;
+  }
 
-    private checkLogin(): void {
-        if (!this.loggedIn) {
-            throw new Error('You must be logged in.');
-        }
-    }
+  public async getSunlight(
+    spotId: string,
+    days: number,
+  ): Promise<SunlightResponse> {
+    this.checkLogin();
+    return this.sunlightResponse;
+  }
 
-    public async getRatings(spotId: string, days: number, intervalHours: number): Promise<RatingResponse> {
-        this.checkLogin();
-        return this.ratingResponse;
-    }
+  public async getWeather(
+    spotId: string,
+    days: number,
+    intervalHours: number,
+  ): Promise<WeatherResponse> {
+    this.checkLogin();
+    return SurflineFakeClient.WEATHER_RESPONSE;
+  }
 
-    public async getTides(spotId: string, days: number): Promise<TideResponse> {
-        this.checkLogin();
-        return SurflineFakeClient.TIDE_RESPONSE;
-    }
+  public async getWind(
+    spotId: string,
+    days: number,
+    intervalHours: number,
+  ): Promise<WindResponse> {
+    this.checkLogin();
+    return SurflineFakeClient.WIND_RESPONSE;
+  }
 
-    public async getSunlight(spotId: string, days: number): Promise<SunlightResponse> {
-        this.checkLogin();
-        return this.sunlightResponse;
-    }
-
-    public async getWeather(spotId: string, days: number, intervalHours: number): Promise<WeatherResponse> {
-        this.checkLogin();
-        return SurflineFakeClient.WEATHER_RESPONSE;
-    }
-
-    public async getWind(spotId: string, days: number, intervalHours: number): Promise<WindResponse> {
-        this.checkLogin();
-        return SurflineFakeClient.WIND_RESPONSE;
-    }
-
-    public async getSurf(spotId: string, days: number, intervalHours: number): Promise<SurfResponse> {
-        this.checkLogin();
-        return this.surfResponse;
-    }
+  public async getSurf(
+    spotId: string,
+    days: number,
+    intervalHours: number,
+  ): Promise<SurfResponse> {
+    this.checkLogin();
+    return this.surfResponse;
+  }
 }

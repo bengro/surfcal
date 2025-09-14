@@ -3,13 +3,13 @@ import { TimeSlot } from './types';
 export function findFreeSlots(
   busySlots: TimeSlot[],
   now: Date,
-  daysIntoFuture: number
+  daysIntoFuture: number,
 ): TimeSlot[] {
   const freeSlots: TimeSlot[] = [];
   const endOfSearchWindow = calculateMaxTime(now, daysIntoFuture);
 
   const sortedBusySlots = busySlots.sort(
-    (a, b) => a.start.getTime() - b.start.getTime()
+    (a, b) => a.start.getTime() - b.start.getTime(),
   );
 
   let searchStart = now;
@@ -18,7 +18,7 @@ export function findFreeSlots(
     if (busySlot.start > searchStart) {
       freeSlots.push({ start: searchStart, end: busySlot.start });
     }
-    searchStart = (busySlot.end > searchStart) ? busySlot.end : searchStart;
+    searchStart = busySlot.end > searchStart ? busySlot.end : searchStart;
   }
 
   if (searchStart < endOfSearchWindow) {
@@ -32,7 +32,7 @@ const calculateMaxTime = (now: Date, daysIntoFuture: number) => {
   const endOfSearchWindow = new Date(now);
   endOfSearchWindow.setDate(now.getDate() + daysIntoFuture);
   return endOfSearchWindow;
-}
+};
 
 const removeShortWindows = (freeSlots: TimeSlot[]): TimeSlot[] => {
   return freeSlots.filter((slot) => {
@@ -40,5 +40,4 @@ const removeShortWindows = (freeSlots: TimeSlot[]): TimeSlot[] => {
     const durationInHours = durationInMs / (1000 * 60 * 60);
     return durationInHours >= 2;
   });
-}
-
+};

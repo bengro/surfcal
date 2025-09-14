@@ -24,7 +24,7 @@ const clients: { name: string; client: GoogleCalendarClient }[] = [
   {
     name: 'GoogleCalendarHttpClient',
     client: new GoogleCalendarHttpClient(
-      process.env.GOOGLE_CALENDAR_API_KEY || ''
+      process.env.GOOGLE_CALENDAR_API_KEY || '',
     ),
   },
   {
