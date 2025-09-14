@@ -17,6 +17,33 @@ const toHumanReadable = (timestamp: number): string => {
   return `${weekday}, ${day}/${month}/${year} ${time}`;
 };
 
+const toDateString = (timestamp: number): string => {
+  const date = new Date(timestamp * 1000);
+  const weekday = date.toLocaleDateString('en-GB', { weekday: 'long' });
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  return `${weekday}, ${day}/${month}/${year}`;
+};
+
+const groupSurfableHoursByDay = (surfableHours: any[]) => {
+  const grouped: { [key: string]: any[] } = {};
+
+  surfableHours.forEach((hour) => {
+    const dayKey = toDateString(hour.startTime);
+    if (!grouped[dayKey]) {
+      grouped[dayKey] = [];
+    }
+    grouped[dayKey].push({
+      ...hour,
+      humanReadableStartTime: toHumanReadable(hour.startTime),
+      humanReadableEndTime: toHumanReadable(hour.endTime),
+    });
+  });
+
+  return grouped;
+};
+
 const isValidDate = (dateString: string): boolean => {
   const parts = dateString.split('/');
   if (parts.length !== 3) return false;
@@ -78,8 +105,14 @@ const main = async () => {
       humanReadableEndTime: toHumanReadable(hour.endTime),
     }));
 
-    console.log('Surfable hours for today:');
-    console.log(surfableHoursWithHumanReadableTime);
+    if (surfableHoursWithHumanReadableTime.length === 0) {
+      console.log('🌊 No surfable hours found for today.');
+      console.log(
+        'The conditions might not be favorable for surfing right now.',
+      );
+    } else {
+      console.log(surfableHoursWithHumanReadableTime);
+    }
   } else if (args.includes('--tomorrow')) {
     const now = Date.now() / 1000;
     const tomorrowNow = now + 86400; // Add 24 hours in seconds to get tomorrow
@@ -96,7 +129,14 @@ const main = async () => {
     }));
 
     console.log('Surfable hours for tomorrow:');
-    console.log(surfableHoursWithHumanReadableTime);
+    if (surfableHoursWithHumanReadableTime.length === 0) {
+      console.log('🌊 No surfable hours found for tomorrow.');
+      console.log(
+        'The conditions might not be favorable for surfing tomorrow.',
+      );
+    } else {
+      console.log(surfableHoursWithHumanReadableTime);
+    }
   } else if (args.includes('--on')) {
     const onIndex = args.indexOf('--on');
     if (onIndex === -1 || onIndex + 1 >= args.length) {
@@ -126,11 +166,75 @@ const main = async () => {
     }));
 
     console.log(`Surfable hours for ${dateString}:`);
-    console.log(surfableHoursWithHumanReadableTime);
+    if (surfableHoursWithHumanReadableTime.length === 0) {
+      console.log(`🌊 No surfable hours found for ${dateString}.`);
+      console.log(
+        'The conditions might not be favorable for surfing on that date.',
+      );
+    } else {
+      console.log(surfableHoursWithHumanReadableTime);
+    }
+  } else if (args.includes('--week')) {
+    const now = Date.now() / 1000;
+    const surfableHours = await getSurfableHours(
+      [spotId],
+      surflineClient,
+      7,
+      now,
+    );
+
+    console.log('Surfable hours for the week:');
+    console.log('');
+
+    if (surfableHours.length === 0) {
+      console.log('🌊 No surfable hours found for the next 7 days.');
+      console.log(
+        'The conditions might not be favorable for surfing during this period.',
+      );
+    } else {
+      const groupedByDay = groupSurfableHoursByDay(surfableHours);
+
+      // If no days were created (shouldn't happen if surfableHours.length > 0), show all hours
+      if (Object.keys(groupedByDay).length === 0) {
+        console.log('📋 All surfable hours:');
+        surfableHours.forEach((hour) => {
+          const surfableHourWithTime = {
+            ...hour,
+            humanReadableStartTime: toHumanReadable(hour.startTime),
+            humanReadableEndTime: toHumanReadable(hour.endTime),
+          };
+          console.log(
+            `🏄 ${surfableHourWithTime.humanReadableStartTime} - ${surfableHourWithTime.humanReadableEndTime}`,
+          );
+        });
+      } else {
+        // Sort days chronologically
+        const sortedDays = Object.keys(groupedByDay).sort((a, b) => {
+          // Extract the first surfable hour timestamp from each day to sort
+          const aTimestamp = groupedByDay[a][0]?.startTime || 0;
+          const bTimestamp = groupedByDay[b][0]?.startTime || 0;
+          return aTimestamp - bTimestamp;
+        });
+
+        sortedDays.forEach((day) => {
+          console.log(`📅 ${day}:`);
+          if (groupedByDay[day].length === 0) {
+            console.log('  No surfable hours');
+          } else {
+            groupedByDay[day].forEach((hour) => {
+              const startTime = hour.humanReadableStartTime.split(' ').pop(); // Get just the time part
+              const endTime = hour.humanReadableEndTime.split(' ').pop(); // Get just the time part
+              console.log(`  🏄 ${startTime} - ${endTime}`);
+            });
+          }
+          console.log('');
+        });
+      }
+    }
   } else {
     console.log('Welcome to surfcal!');
     console.log(
-      'Usage: ./surfcal [--spot spotId] (--today | --tomorrow | --on dd/mm/yyyy)',
+      'Usage: ./surfcal [--spotId spotId] (--today | --tomorrow | --week | --on dd/mm/yyyy)',
     );
   }
 };

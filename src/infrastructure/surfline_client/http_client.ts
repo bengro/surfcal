@@ -48,7 +48,6 @@ export class SurflineHttpClient implements SurflineClient {
         this.accessToken = response.data.access_token;
         this.httpClient.defaults.headers.common['Authorization'] =
           `Bearer ${this.accessToken}`;
-        console.log('Successfully logged in to Surfline.');
       } else {
         throw new Error('Login failed: No access token received.');
       }

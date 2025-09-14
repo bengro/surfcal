@@ -50,8 +50,9 @@ export const getSurfableHours = async (
         continue;
       }
 
-      const endTime = getEndOfDay(now);
-      if (endTime && hourlyRating.timestamp >= endTime) {
+      // Calculate the end time based on the number of days requested, not just the current day
+      const endTime = now + (forDays * 24 * 60 * 60); // forDays * seconds per day
+      if (hourlyRating.timestamp >= endTime) {
         continue;
       }
 
