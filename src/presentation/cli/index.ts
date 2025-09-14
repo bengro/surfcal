@@ -77,24 +77,30 @@ const main = async () => {
 
   const args = process.argv.slice(2);
 
-  // Parse optional --spot argument
-  let spotId = '';
-  const spotIndex = args.indexOf('--spotId');
-  if (spotIndex !== -1) {
-    if (spotIndex + 1 >= args.length) {
-      console.error('Error: --spotId requires a spotId value.');
-      process.exit(1);
+  // Parse multiple --spotId arguments
+  const spotIds: string[] = [];
+  let i = 0;
+  while (i < args.length) {
+    if (args[i] === '--spotId') {
+      if (i + 1 >= args.length) {
+        console.error('Error: --spotId requires a spotId value.');
+        process.exit(1);
+      }
+      spotIds.push(args[i + 1]);
+      args.splice(i, 2); // Remove --spotId and its value from args
+    } else {
+      i++;
     }
-    spotId = args[spotIndex + 1];
-    args.splice(spotIndex, 2); // Remove --spot and its value from args
-  } else {
-    throw Error('Error: --spotId argument is required.');
+  }
+  
+  if (spotIds.length === 0) {
+    throw Error('Error: At least one --spotId argument is required.');
   }
 
   if (args.includes('--today')) {
     const now = Date.now() / 1000;
     const surfableHours = await getSurfableHours(
-      [spotId],
+      spotIds,
       surflineClient,
       1,
       now,
@@ -105,19 +111,34 @@ const main = async () => {
       humanReadableEndTime: toHumanReadable(hour.endTime),
     }));
 
+    console.log(`Surfable hours for today (${spotIds.length} spot${spotIds.length > 1 ? 's' : ''}):`);
     if (surfableHoursWithHumanReadableTime.length === 0) {
       console.log('🌊 No surfable hours found for today.');
       console.log(
         'The conditions might not be favorable for surfing right now.',
       );
     } else {
-      console.log(surfableHoursWithHumanReadableTime);
+      // Group by spot for better readability
+      const groupedBySpot = surfableHoursWithHumanReadableTime.reduce((acc, hour) => {
+        if (!acc[hour.spotId]) {
+          acc[hour.spotId] = [];
+        }
+        acc[hour.spotId].push(hour);
+        return acc;
+      }, {} as { [spotId: string]: any[] });
+
+      Object.entries(groupedBySpot).forEach(([spotId, hours]) => {
+        console.log(`\n📍 Spot: ${spotId}`);
+        hours.forEach(hour => {
+          console.log(`  🏄 ${hour.humanReadableStartTime} - ${hour.humanReadableEndTime} (${hour.condition}, ${hour.waveHeight}ft)`);
+        });
+      });
     }
   } else if (args.includes('--tomorrow')) {
     const now = Date.now() / 1000;
     const tomorrowNow = now + 86400; // Add 24 hours in seconds to get tomorrow
     const surfableHours = await getSurfableHours(
-      [spotId],
+      spotIds,
       surflineClient,
       7,
       tomorrowNow,
@@ -128,14 +149,28 @@ const main = async () => {
       humanReadableEndTime: toHumanReadable(hour.endTime),
     }));
 
-    console.log('Surfable hours for tomorrow:');
+    console.log(`Surfable hours for tomorrow (${spotIds.length} spot${spotIds.length > 1 ? 's' : ''}):`);
     if (surfableHoursWithHumanReadableTime.length === 0) {
       console.log('🌊 No surfable hours found for tomorrow.');
       console.log(
         'The conditions might not be favorable for surfing tomorrow.',
       );
     } else {
-      console.log(surfableHoursWithHumanReadableTime);
+      // Group by spot for better readability
+      const groupedBySpot = surfableHoursWithHumanReadableTime.reduce((acc, hour) => {
+        if (!acc[hour.spotId]) {
+          acc[hour.spotId] = [];
+        }
+        acc[hour.spotId].push(hour);
+        return acc;
+      }, {} as { [spotId: string]: any[] });
+
+      Object.entries(groupedBySpot).forEach(([spotId, hours]) => {
+        console.log(`\n📍 Spot: ${spotId}`);
+        hours.forEach(hour => {
+          console.log(`  🏄 ${hour.humanReadableStartTime} - ${hour.humanReadableEndTime} (${hour.condition}, ${hour.waveHeight}ft)`);
+        });
+      });
     }
   } else if (args.includes('--on')) {
     const onIndex = args.indexOf('--on');
@@ -154,7 +189,7 @@ const main = async () => {
     const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day)); // Months are 0-indexed
     const targetNow = date.getTime() / 1000;
     const surfableHours = await getSurfableHours(
-      [spotId],
+      spotIds,
       surflineClient,
       7,
       targetNow,
@@ -165,25 +200,39 @@ const main = async () => {
       humanReadableEndTime: toHumanReadable(hour.endTime),
     }));
 
-    console.log(`Surfable hours for ${dateString}:`);
+    console.log(`Surfable hours for ${dateString} (${spotIds.length} spot${spotIds.length > 1 ? 's' : ''}):`);
     if (surfableHoursWithHumanReadableTime.length === 0) {
       console.log(`🌊 No surfable hours found for ${dateString}.`);
       console.log(
         'The conditions might not be favorable for surfing on that date.',
       );
     } else {
-      console.log(surfableHoursWithHumanReadableTime);
+      // Group by spot for better readability
+      const groupedBySpot = surfableHoursWithHumanReadableTime.reduce((acc, hour) => {
+        if (!acc[hour.spotId]) {
+          acc[hour.spotId] = [];
+        }
+        acc[hour.spotId].push(hour);
+        return acc;
+      }, {} as { [spotId: string]: any[] });
+
+      Object.entries(groupedBySpot).forEach(([spotId, hours]) => {
+        console.log(`\n📍 Spot: ${spotId}`);
+        hours.forEach(hour => {
+          console.log(`  🏄 ${hour.humanReadableStartTime} - ${hour.humanReadableEndTime} (${hour.condition}, ${hour.waveHeight}ft)`);
+        });
+      });
     }
   } else if (args.includes('--week')) {
     const now = Date.now() / 1000;
     const surfableHours = await getSurfableHours(
-      [spotId],
+      spotIds,
       surflineClient,
       7,
       now,
     );
 
-    console.log('Surfable hours for the week:');
+    console.log(`Surfable hours for the week (${spotIds.length} spot${spotIds.length > 1 ? 's' : ''}):`);
     console.log('');
 
     if (surfableHours.length === 0) {
@@ -192,50 +241,65 @@ const main = async () => {
         'The conditions might not be favorable for surfing during this period.',
       );
     } else {
-      const groupedByDay = groupSurfableHoursByDay(surfableHours);
+      // Group by spot first, then by day
+      const groupedBySpot = surfableHours.reduce((acc, hour) => {
+        if (!acc[hour.spotId]) {
+          acc[hour.spotId] = [];
+        }
+        acc[hour.spotId].push({
+          ...hour,
+          humanReadableStartTime: toHumanReadable(hour.startTime),
+          humanReadableEndTime: toHumanReadable(hour.endTime),
+        });
+        return acc;
+      }, {} as { [spotId: string]: any[] });
 
-      // If no days were created (shouldn't happen if surfableHours.length > 0), show all hours
-      if (Object.keys(groupedByDay).length === 0) {
-        console.log('📋 All surfable hours:');
-        surfableHours.forEach((hour) => {
-          const surfableHourWithTime = {
-            ...hour,
-            humanReadableStartTime: toHumanReadable(hour.startTime),
-            humanReadableEndTime: toHumanReadable(hour.endTime),
-          };
-          console.log(
-            `🏄 ${surfableHourWithTime.humanReadableStartTime} - ${surfableHourWithTime.humanReadableEndTime}`,
-          );
-        });
-      } else {
-        // Sort days chronologically
-        const sortedDays = Object.keys(groupedByDay).sort((a, b) => {
-          // Extract the first surfable hour timestamp from each day to sort
-          const aTimestamp = groupedByDay[a][0]?.startTime || 0;
-          const bTimestamp = groupedByDay[b][0]?.startTime || 0;
-          return aTimestamp - bTimestamp;
-        });
+      Object.entries(groupedBySpot).forEach(([spotId, hours]) => {
+        console.log(`📍 Spot: ${spotId}`);
+        
+        const groupedByDay = groupSurfableHoursByDay(hours);
+        
+        if (Object.keys(groupedByDay).length === 0) {
+          console.log('  No surfable hours for this spot');
+        } else {
+          // Sort days chronologically
+          const sortedDays = Object.keys(groupedByDay).sort((a, b) => {
+            const aTimestamp = groupedByDay[a][0]?.startTime || 0;
+            const bTimestamp = groupedByDay[b][0]?.startTime || 0;
+            return aTimestamp - bTimestamp;
+          });
 
-        sortedDays.forEach((day) => {
-          console.log(`📅 ${day}:`);
-          if (groupedByDay[day].length === 0) {
-            console.log('  No surfable hours');
-          } else {
-            groupedByDay[day].forEach((hour) => {
-              const startTime = hour.humanReadableStartTime.split(' ').pop(); // Get just the time part
-              const endTime = hour.humanReadableEndTime.split(' ').pop(); // Get just the time part
-              console.log(`  🏄 ${startTime} - ${endTime}`);
-            });
-          }
-          console.log('');
-        });
-      }
+          sortedDays.forEach((day) => {
+            console.log(`  📅 ${day}:`);
+            if (groupedByDay[day].length === 0) {
+              console.log('    No surfable hours');
+            } else {
+              groupedByDay[day].forEach((hour) => {
+                const startTime = hour.humanReadableStartTime.split(' ').pop();
+                const endTime = hour.humanReadableEndTime.split(' ').pop();
+                console.log(`    🏄 ${startTime} - ${endTime} (${hour.condition}, ${hour.waveHeight}ft)`);
+              });
+            }
+          });
+        }
+        console.log('');
+      });
     }
   } else {
     console.log('Welcome to surfcal!');
     console.log(
-      'Usage: ./surfcal [--spotId spotId] (--today | --tomorrow | --week | --on dd/mm/yyyy)',
+      'Usage: ./surfcal [--spotId spotId1] [--spotId spotId2] ... (--today | --tomorrow | --week | --on dd/mm/yyyy)',
     );
+    console.log('');
+    console.log('Examples:');
+    console.log('  Single spot:   ./surfcal --spotId 5842041f4e65fad6a7708876 --today');
+    console.log('  Multiple spots: ./surfcal --spotId 5842041f4e65fad6a7708876 --spotId 5842041f4e65fad6a7708815 --week');
+    console.log('');
+    console.log('Popular spot IDs:');
+    console.log('  Malibu:        5842041f4e65fad6a7708876');
+    console.log('  Pipeline:      5842041f4e65fad6a7708815');
+    console.log('  Bells Beach:   5842041f4e65fad6a770883d');
+    console.log('  Jeffreys Bay:  5842041f4e65fad6a7708962');
   }
 };
 
