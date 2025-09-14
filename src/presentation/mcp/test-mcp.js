@@ -13,7 +13,7 @@ async function testMCPServer() {
   console.log('🧪 Testing Surfcal MCP Server...\n');
 
   const serverPath = path.join(__dirname, 'dist/presentation/mcp/server.js');
-  
+
   // Check if server file exists
   const fs = require('fs');
   if (!fs.existsSync(serverPath)) {
@@ -24,7 +24,7 @@ async function testMCPServer() {
   console.log('✅ MCP server file found');
   console.log('✅ Dependencies installed');
   console.log('✅ Project built successfully');
-  
+
   // Check environment variables
   if (!process.env.SURFLINE_EMAIL || !process.env.SURFLINE_PASSWORD) {
     console.warn('⚠️  SURFLINE_EMAIL and SURFLINE_PASSWORD not set');
@@ -37,13 +37,13 @@ async function testMCPServer() {
   console.log('   Server executable: dist/presentation/mcp/server.js');
   console.log('   Protocol: stdio');
   console.log('   Capabilities: tools, resources');
-  
+
   console.log('\n🛠️  Available Tools:');
   console.log('   • get_surfable_hours_today');
-  console.log('   • get_surfable_hours_tomorrow'); 
+  console.log('   • get_surfable_hours_tomorrow');
   console.log('   • get_surfable_hours_week');
   console.log('   • get_surfable_hours_date');
-  
+
   console.log('\n📚 Available Resources:');
   console.log('   • surfcal://spots/popular');
   console.log('   • surfcal://about');
@@ -56,13 +56,17 @@ async function testMCPServer() {
 
   console.log('\n📖 Next Steps:');
   console.log('   1. Add server to your MCP client configuration');
-  console.log('   2. Use: cp mcp-config.json ~/.config/claude-desktop/claude_desktop_config.json');
+  console.log(
+    '   2. Use: cp mcp-config.json ~/.config/claude-desktop/claude_desktop_config.json',
+  );
   console.log('   3. Restart your MCP client');
   console.log('   4. Ask your AI agent to check surf conditions!');
 
   console.log('\n🌊 Example Usage:');
   console.log('   "Check surf conditions at Malibu for this week and schedule');
-  console.log('    surf sessions when conditions are good and I\'m available."');
+  console.log(
+    '    surf sessions when conditions are good and I\'m available."',
+  );
 
   console.log('\n✨ MCP Server Test Complete!');
 }

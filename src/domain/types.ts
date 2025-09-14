@@ -4,4 +4,5 @@ export interface SurfableHour {
   spotId: string;
   condition: string;
   waveHeight: number;
+  calendarConflict?: boolean; // Optional field to mark calendar conflicts
 }

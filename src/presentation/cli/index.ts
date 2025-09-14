@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { SurflineHttpClient } from '../../infrastructure/surfline_client/http_client';
+import { GoogleCalendarHttpClient } from '../../infrastructure/google_calendar_client/http_client';
 import { runCLI } from './runner';
 
 const main = async () => {
@@ -24,16 +25,24 @@ const main = async () => {
     process.exit(1);
   }
 
+  // Initialize Google Calendar client if API key is provided
+  let googleCalendarClient;
+  if (process.env.GOOGLE_CALENDAR_API_KEY) {
+    googleCalendarClient = new GoogleCalendarHttpClient(
+      process.env.GOOGLE_CALENDAR_API_KEY,
+    );
+  }
+
   const args = process.argv.slice(2);
-  const result = await runCLI(args, surflineClient);
-  
+  const result = await runCLI(args, surflineClient, googleCalendarClient);
+
   if (!result.success) {
     if (result.error) {
       console.error(result.error);
     }
     process.exit(1);
   }
-  
+
   if (result.output) {
     console.log(result.output);
   }

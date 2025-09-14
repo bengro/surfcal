@@ -48,6 +48,7 @@ Add the Surfcal MCP server to your MCP client configuration. For Claude Desktop,
 ```
 
 Or use the provided configuration template:
+
 ```bash
 cp mcp-config.json ~/.config/claude-desktop/claude_desktop_config.json
 ```
@@ -55,12 +56,15 @@ cp mcp-config.json ~/.config/claude-desktop/claude_desktop_config.json
 ## Available Tools
 
 ### 1. `get_surfable_hours_today`
+
 Get surfable conditions for today at a specific surf spot.
 
 **Parameters:**
+
 - `spotId` (string, required): Surfline spot ID
 
 **Example:**
+
 ```json
 {
   "name": "get_surfable_hours_today",
@@ -71,25 +75,32 @@ Get surfable conditions for today at a specific surf spot.
 ```
 
 ### 2. `get_surfable_hours_tomorrow`
+
 Get surfable conditions for tomorrow at a specific surf spot.
 
 **Parameters:**
+
 - `spotId` (string, required): Surfline spot ID
 
 ### 3. `get_surfable_hours_week`
+
 Get surfable conditions for the next 7 days at a specific surf spot.
 
 **Parameters:**
+
 - `spotId` (string, required): Surfline spot ID
 
 ### 4. `get_surfable_hours_date`
+
 Get surfable conditions for a specific date at a specific surf spot.
 
 **Parameters:**
+
 - `spotId` (string, required): Surfline spot ID
 - `date` (string, required): Date in DD/MM/YYYY format
 
 **Example:**
+
 ```json
 {
   "name": "get_surfable_hours_date",
@@ -103,9 +114,11 @@ Get surfable conditions for a specific date at a specific surf spot.
 ## Available Resources
 
 ### 1. `surfcal://spots/popular`
+
 A JSON resource containing popular surf spots with their Surfline IDs, locations, and descriptions.
 
 ### 2. `surfcal://about`
+
 Information about the Surfcal MCP server and its capabilities.
 
 ## Surf Condition Filtering
@@ -127,6 +140,7 @@ An AI agent can now:
 3. **Schedule surf sessions** during optimal conditions when the calendar is free
 
 Example workflow:
+
 ```
 Agent: "Let me check surf conditions for Malibu this week and schedule sessions when conditions are good and you're available."
 
@@ -139,12 +153,12 @@ Agent: "Let me check surf conditions for Malibu this week and schedule sessions 
 
 Here are some popular spots with their Surfline IDs for quick reference:
 
-| Spot Name | Surfline ID | Location |
-|-----------|-------------|----------|
-| Malibu | 5842041f4e65fad6a7708876 | California, USA |
-| Pipeline | 5842041f4e65fad6a7708815 | Hawaii, USA |
-| Bells Beach | 5842041f4e65fad6a770883d | Victoria, Australia |
-| Jeffreys Bay | 5842041f4e65fad6a7708962 | South Africa |
+| Spot Name    | Surfline ID              | Location            |
+| ------------ | ------------------------ | ------------------- |
+| Malibu       | 5842041f4e65fad6a7708876 | California, USA     |
+| Pipeline     | 5842041f4e65fad6a7708815 | Hawaii, USA         |
+| Bells Beach  | 5842041f4e65fad6a770883d | Victoria, Australia |
+| Jeffreys Bay | 5842041f4e65fad6a7708962 | South Africa        |
 
 ## Testing the MCP Server
 

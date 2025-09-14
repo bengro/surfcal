@@ -1,21 +1,28 @@
 import { getSurfableHours } from '../../domain/get_surfable_hours';
 import { SurflineClient } from '../../infrastructure/surfline_client/surfline_client';
+import { GoogleCalendarClient } from '../../infrastructure/google_calendar_client/google_calendar_client';
+import { SurfableHoursWithCalendarService } from '../../application/surfable_hours_with_calendar_service';
 
 // Cache for spot names to avoid repeated API calls
 const spotNameCache = new Map<string, string>();
 
-const getSpotName = async (spotId: string, surflineClient: SurflineClient): Promise<string> => {
+const getSpotName = async (
+  spotId: string,
+  surflineClient: SurflineClient,
+): Promise<string> => {
   if (spotNameCache.has(spotId)) {
     return spotNameCache.get(spotId)!;
   }
-  
+
   try {
     const spotInfo = await surflineClient.getSpotInfo(spotId);
     const spotName = spotInfo.name;
     spotNameCache.set(spotId, spotName);
     return spotName;
   } catch (error) {
-    console.warn(`Warning: Could not fetch name for spot ${spotId}, using ID instead`);
+    console.warn(
+      `Warning: Could not fetch name for spot ${spotId}, using ID instead`,
+    );
     return spotId;
   }
 };
@@ -81,16 +88,20 @@ export interface CLIResult {
   error?: string;
 }
 
-export const runCLI = async (args: string[], surflineClient: SurflineClient): Promise<CLIResult> => {
+export const runCLI = async (
+  args: string[],
+  surflineClient: SurflineClient,
+  googleCalendarClient?: GoogleCalendarClient,
+): Promise<CLIResult> => {
   try {
     // Clear spot name cache for each run
     spotNameCache.clear();
-    
+
     let output = '';
     const originalConsoleLog = console.log;
     const originalConsoleError = console.error;
     const originalConsoleWarn = console.warn;
-    
+
     // Capture console output
     console.log = (...args: any[]) => {
       output += args.join(' ') + '\n';
@@ -103,8 +114,9 @@ export const runCLI = async (args: string[], surflineClient: SurflineClient): Pr
     };
 
     try {
-      // Parse multiple --spotId arguments
+      // Parse multiple --spotId and --calendar arguments
       const spotIds: string[] = [];
+      const calendarIds: string[] = [];
       let i = 0;
       while (i < args.length) {
         if (args[i] === '--spotId') {
@@ -112,103 +124,173 @@ export const runCLI = async (args: string[], surflineClient: SurflineClient): Pr
             return {
               success: false,
               output: '',
-              error: 'Error: --spotId requires a spotId value.'
+              error: 'Error: --spotId requires a spotId value.',
             };
           }
           spotIds.push(args[i + 1]);
           args.splice(i, 2); // Remove --spotId and its value from args
+        } else if (args[i] === '--calendar') {
+          if (i + 1 >= args.length || args[i + 1].startsWith('--')) {
+            return {
+              success: false,
+              output: '',
+              error: 'Error: --calendar requires a calendar ID value.',
+            };
+          }
+          calendarIds.push(args[i + 1]);
+          args.splice(i, 2); // Remove --calendar and its value from args
         } else {
           i++;
         }
       }
-      
+
+      // Create calendar service if calendar IDs are provided
+      const calendarService = new SurfableHoursWithCalendarService(
+        surflineClient,
+        googleCalendarClient,
+      );
+
+      // Helper function to get surfable hours with optional calendar filtering
+      const getSurfableHoursWithCalendar = async (
+        spotIds: string[],
+        days: number,
+        now: number,
+      ) => {
+        return await calendarService.getSurfableHoursWithCalendarFiltering({
+          spotIds,
+          days,
+          now,
+          calendarIds: calendarIds.length > 0 ? calendarIds : undefined,
+        });
+      };
+
       // Check if this is a help request (no spotIds and no command flags)
-      const hasCommandFlag = args.includes('--today') || args.includes('--tomorrow') || args.includes('--week') || args.includes('--on');
-      
+      const hasCommandFlag =
+        args.includes('--today') ||
+        args.includes('--tomorrow') ||
+        args.includes('--week') ||
+        args.includes('--on');
+
       if (spotIds.length === 0 && hasCommandFlag) {
         return {
           success: false,
           output: '',
-          error: 'Error: At least one --spotId argument is required.'
+          error: 'Error: At least one --spotId argument is required.',
         };
       }
 
       if (args.includes('--today')) {
         const now = Date.now() / 1000;
-        const surfableHours = await getSurfableHours(
+        const surfableHours = await getSurfableHoursWithCalendar(
           spotIds,
-          surflineClient,
           1,
           now,
         );
-        const surfableHoursWithHumanReadableTime = surfableHours.map((hour) => ({
-          ...hour,
-          humanReadableStartTime: toHumanReadable(hour.startTime),
-          humanReadableEndTime: toHumanReadable(hour.endTime),
-        }));
+        const surfableHoursWithHumanReadableTime = surfableHours.map(
+          (hour) => ({
+            ...hour,
+            humanReadableStartTime: toHumanReadable(hour.startTime),
+            humanReadableEndTime: toHumanReadable(hour.endTime),
+          }),
+        );
 
-        console.log(`Surfable hours for today (${spotIds.length} spot${spotIds.length > 1 ? 's' : ''}):`);
+        const calendarText =
+          calendarIds.length > 0
+            ? ` (filtered by ${calendarIds.length} calendar${calendarIds.length > 1 ? 's' : ''})`
+            : '';
+        console.log(
+          `Surfable hours for today (${spotIds.length} spot${spotIds.length > 1 ? 's' : ''})${calendarText}:`,
+        );
         if (surfableHoursWithHumanReadableTime.length === 0) {
           console.log('🌊 No surfable hours found for today.');
-          console.log(
-            'The conditions might not be favorable for surfing right now.',
-          );
+          const reason =
+            calendarIds.length > 0
+              ? 'The conditions might not be favorable for surfing or you have calendar conflicts.'
+              : 'The conditions might not be favorable for surfing right now.';
+          console.log(reason);
         } else {
           // Group by spot for better readability
-          const groupedBySpot = surfableHoursWithHumanReadableTime.reduce((acc, hour) => {
-            if (!acc[hour.spotId]) {
-              acc[hour.spotId] = [];
-            }
-            acc[hour.spotId].push(hour);
-            return acc;
-          }, {} as { [spotId: string]: any[] });
+          const groupedBySpot = surfableHoursWithHumanReadableTime.reduce(
+            (acc, hour) => {
+              if (!acc[hour.spotId]) {
+                acc[hour.spotId] = [];
+              }
+              acc[hour.spotId].push(hour);
+              return acc;
+            },
+            {} as { [spotId: string]: any[] },
+          );
 
           for (const [spotId, hours] of Object.entries(groupedBySpot)) {
             const spotName = await getSpotName(spotId, surflineClient);
             const spotDisplay = formatSpotDisplay(spotName, spotId);
             console.log(`\n📍 Spot: ${spotDisplay}`);
-            hours.forEach(hour => {
-              console.log(`  🏄 ${hour.humanReadableStartTime} - ${hour.humanReadableEndTime} (${hour.condition}, ${hour.waveHeight}ft)`);
+            hours.forEach((hour) => {
+              const conflictIndicator = hour.calendarConflict ? '⚠️ ' : '🏄 ';
+              const conflictSuffix = hour.calendarConflict
+                ? ' [CALENDAR CONFLICT]'
+                : '';
+              console.log(
+                `  ${conflictIndicator}${hour.humanReadableStartTime} - ${hour.humanReadableEndTime} (${hour.condition}, ${hour.waveHeight}ft)${conflictSuffix}`,
+              );
             });
           }
         }
       } else if (args.includes('--tomorrow')) {
         const now = Date.now() / 1000;
         const tomorrowNow = now + 86400; // Add 24 hours in seconds to get tomorrow
-        const surfableHours = await getSurfableHours(
+        const surfableHours = await getSurfableHoursWithCalendar(
           spotIds,
-          surflineClient,
           7,
           tomorrowNow,
         );
-        const surfableHoursWithHumanReadableTime = surfableHours.map((hour) => ({
-          ...hour,
-          humanReadableStartTime: toHumanReadable(hour.startTime),
-          humanReadableEndTime: toHumanReadable(hour.endTime),
-        }));
+        const surfableHoursWithHumanReadableTime = surfableHours.map(
+          (hour) => ({
+            ...hour,
+            humanReadableStartTime: toHumanReadable(hour.startTime),
+            humanReadableEndTime: toHumanReadable(hour.endTime),
+          }),
+        );
 
-        console.log(`Surfable hours for tomorrow (${spotIds.length} spot${spotIds.length > 1 ? 's' : ''}):`);
+        const calendarText =
+          calendarIds.length > 0
+            ? ` (filtered by ${calendarIds.length} calendar${calendarIds.length > 1 ? 's' : ''})`
+            : '';
+        console.log(
+          `Surfable hours for tomorrow (${spotIds.length} spot${spotIds.length > 1 ? 's' : ''})${calendarText}:`,
+        );
         if (surfableHoursWithHumanReadableTime.length === 0) {
           console.log('🌊 No surfable hours found for tomorrow.');
-          console.log(
-            'The conditions might not be favorable for surfing tomorrow.',
-          );
+          const reason =
+            calendarIds.length > 0
+              ? 'The conditions might not be favorable for surfing or you have calendar conflicts.'
+              : 'The conditions might not be favorable for surfing tomorrow.';
+          console.log(reason);
         } else {
           // Group by spot for better readability
-          const groupedBySpot = surfableHoursWithHumanReadableTime.reduce((acc, hour) => {
-            if (!acc[hour.spotId]) {
-              acc[hour.spotId] = [];
-            }
-            acc[hour.spotId].push(hour);
-            return acc;
-          }, {} as { [spotId: string]: any[] });
+          const groupedBySpot = surfableHoursWithHumanReadableTime.reduce(
+            (acc, hour) => {
+              if (!acc[hour.spotId]) {
+                acc[hour.spotId] = [];
+              }
+              acc[hour.spotId].push(hour);
+              return acc;
+            },
+            {} as { [spotId: string]: any[] },
+          );
 
           for (const [spotId, hours] of Object.entries(groupedBySpot)) {
             const spotName = await getSpotName(spotId, surflineClient);
             const spotDisplay = formatSpotDisplay(spotName, spotId);
             console.log(`\n📍 Spot: ${spotDisplay}`);
-            hours.forEach(hour => {
-              console.log(`  🏄 ${hour.humanReadableStartTime} - ${hour.humanReadableEndTime} (${hour.condition}, ${hour.waveHeight}ft)`);
+            hours.forEach((hour) => {
+              const conflictIndicator = hour.calendarConflict ? '⚠️ ' : '🏄 ';
+              const conflictSuffix = hour.calendarConflict
+                ? ' [CALENDAR CONFLICT]'
+                : '';
+              console.log(
+                `  ${conflictIndicator}${hour.humanReadableStartTime} - ${hour.humanReadableEndTime} (${hour.condition}, ${hour.waveHeight}ft)${conflictSuffix}`,
+              );
             });
           }
         }
@@ -218,7 +300,7 @@ export const runCLI = async (args: string[], surflineClient: SurflineClient): Pr
           return {
             success: false,
             output: '',
-            error: 'Error: --on requires a date argument in dd/mm/yyyy format.'
+            error: 'Error: --on requires a date argument in dd/mm/yyyy format.',
           };
         }
         const dateString = args[onIndex + 1];
@@ -226,87 +308,119 @@ export const runCLI = async (args: string[], surflineClient: SurflineClient): Pr
           return {
             success: false,
             output: '',
-            error: 'Error: Invalid date format. Use dd/mm/yyyy.'
+            error: 'Error: Invalid date format. Use dd/mm/yyyy.',
           };
         }
         const [day, month, year] = dateString.split('/');
-        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day)); // Months are 0-indexed
+        const date = new Date(
+          parseInt(year),
+          parseInt(month) - 1,
+          parseInt(day),
+        ); // Months are 0-indexed
         const targetNow = date.getTime() / 1000;
-        const surfableHours = await getSurfableHours(
+        const surfableHours = await getSurfableHoursWithCalendar(
           spotIds,
-          surflineClient,
           7,
           targetNow,
         );
-        const surfableHoursWithHumanReadableTime = surfableHours.map((hour) => ({
-          ...hour,
-          humanReadableStartTime: toHumanReadable(hour.startTime),
-          humanReadableEndTime: toHumanReadable(hour.endTime),
-        }));
+        const surfableHoursWithHumanReadableTime = surfableHours.map(
+          (hour) => ({
+            ...hour,
+            humanReadableStartTime: toHumanReadable(hour.startTime),
+            humanReadableEndTime: toHumanReadable(hour.endTime),
+          }),
+        );
 
-        console.log(`Surfable hours for ${dateString} (${spotIds.length} spot${spotIds.length > 1 ? 's' : ''}):`);
+        const calendarText =
+          calendarIds.length > 0
+            ? ` (filtered by ${calendarIds.length} calendar${calendarIds.length > 1 ? 's' : ''})`
+            : '';
+        console.log(
+          `Surfable hours for ${dateString} (${spotIds.length} spot${spotIds.length > 1 ? 's' : ''})${calendarText}:`,
+        );
         if (surfableHoursWithHumanReadableTime.length === 0) {
           console.log(`🌊 No surfable hours found for ${dateString}.`);
-          console.log(
-            'The conditions might not be favorable for surfing on that date.',
-          );
+          const reason =
+            calendarIds.length > 0
+              ? 'The conditions might not be favorable for surfing or you have calendar conflicts.'
+              : 'The conditions might not be favorable for surfing on that date.';
+          console.log(reason);
         } else {
           // Group by spot for better readability
-          const groupedBySpot = surfableHoursWithHumanReadableTime.reduce((acc, hour) => {
-            if (!acc[hour.spotId]) {
-              acc[hour.spotId] = [];
-            }
-            acc[hour.spotId].push(hour);
-            return acc;
-          }, {} as { [spotId: string]: any[] });
+          const groupedBySpot = surfableHoursWithHumanReadableTime.reduce(
+            (acc, hour) => {
+              if (!acc[hour.spotId]) {
+                acc[hour.spotId] = [];
+              }
+              acc[hour.spotId].push(hour);
+              return acc;
+            },
+            {} as { [spotId: string]: any[] },
+          );
 
           for (const [spotId, hours] of Object.entries(groupedBySpot)) {
             const spotName = await getSpotName(spotId, surflineClient);
             const spotDisplay = formatSpotDisplay(spotName, spotId);
             console.log(`\n📍 Spot: ${spotDisplay}`);
-            hours.forEach(hour => {
-              console.log(`  🏄 ${hour.humanReadableStartTime} - ${hour.humanReadableEndTime} (${hour.condition}, ${hour.waveHeight}ft)`);
+            hours.forEach((hour) => {
+              const conflictIndicator = hour.calendarConflict ? '⚠️ ' : '🏄 ';
+              const conflictSuffix = hour.calendarConflict
+                ? ' [CALENDAR CONFLICT]'
+                : '';
+              console.log(
+                `  ${conflictIndicator}${hour.humanReadableStartTime} - ${hour.humanReadableEndTime} (${hour.condition}, ${hour.waveHeight}ft)${conflictSuffix}`,
+              );
             });
           }
         }
       } else if (args.includes('--week')) {
         const now = Date.now() / 1000;
-        const surfableHours = await getSurfableHours(
+        const surfableHours = await getSurfableHoursWithCalendar(
           spotIds,
-          surflineClient,
           7,
           now,
         );
 
-        console.log(`Surfable hours for the week (${spotIds.length} spot${spotIds.length > 1 ? 's' : ''}):`);
+        const calendarText =
+          calendarIds.length > 0
+            ? ` (filtered by ${calendarIds.length} calendar${calendarIds.length > 1 ? 's' : ''})`
+            : '';
+        console.log(
+          `Surfable hours for the week (${spotIds.length} spot${spotIds.length > 1 ? 's' : ''})${calendarText}:`,
+        );
         console.log('');
 
         if (surfableHours.length === 0) {
           console.log('🌊 No surfable hours found for the next 7 days.');
-          console.log(
-            'The conditions might not be favorable for surfing during this period.',
-          );
+          const reason =
+            calendarIds.length > 0
+              ? 'The conditions might not be favorable for surfing or you have calendar conflicts.'
+              : 'The conditions might not be favorable for surfing during this period.';
+          console.log(reason);
         } else {
           // Group by spot first, then by day
-          const groupedBySpot = surfableHours.reduce((acc, hour) => {
-            if (!acc[hour.spotId]) {
-              acc[hour.spotId] = [];
-            }
-            acc[hour.spotId].push({
-              ...hour,
-              humanReadableStartTime: toHumanReadable(hour.startTime),
-              humanReadableEndTime: toHumanReadable(hour.endTime),
-            });
-            return acc;
-          }, {} as { [spotId: string]: any[] });
+          const groupedBySpot = surfableHours.reduce(
+            (acc, hour) => {
+              if (!acc[hour.spotId]) {
+                acc[hour.spotId] = [];
+              }
+              acc[hour.spotId].push({
+                ...hour,
+                humanReadableStartTime: toHumanReadable(hour.startTime),
+                humanReadableEndTime: toHumanReadable(hour.endTime),
+              });
+              return acc;
+            },
+            {} as { [spotId: string]: any[] },
+          );
 
           for (const [spotId, hours] of Object.entries(groupedBySpot)) {
             const spotName = await getSpotName(spotId, surflineClient);
             const spotDisplay = formatSpotDisplay(spotName, spotId);
             console.log(`📍 Spot: ${spotDisplay}`);
-            
+
             const groupedByDay = groupSurfableHoursByDay(hours);
-            
+
             if (Object.keys(groupedByDay).length === 0) {
               console.log('  No surfable hours for this spot');
             } else {
@@ -323,9 +437,19 @@ export const runCLI = async (args: string[], surflineClient: SurflineClient): Pr
                   console.log('    No surfable hours');
                 } else {
                   groupedByDay[day].forEach((hour) => {
-                    const startTime = hour.humanReadableStartTime.split(' ').pop();
+                    const startTime = hour.humanReadableStartTime
+                      .split(' ')
+                      .pop();
                     const endTime = hour.humanReadableEndTime.split(' ').pop();
-                    console.log(`    🏄 ${startTime} - ${endTime} (${hour.condition}, ${hour.waveHeight}ft)`);
+                    const conflictIndicator = hour.calendarConflict
+                      ? '⚠️ '
+                      : '🏄 ';
+                    const conflictSuffix = hour.calendarConflict
+                      ? ' [CALENDAR CONFLICT]'
+                      : '';
+                    console.log(
+                      `    ${conflictIndicator}${startTime} - ${endTime} (${hour.condition}, ${hour.waveHeight}ft)${conflictSuffix}`,
+                    );
                   });
                 }
               });
@@ -336,12 +460,36 @@ export const runCLI = async (args: string[], surflineClient: SurflineClient): Pr
       } else {
         console.log('Welcome to surfcal!');
         console.log(
-          'Usage: ./surfcal [--spotId spotId1] [--spotId spotId2] ... (--today | --tomorrow | --week | --on dd/mm/yyyy)',
+          'Usage: ./surfcal [--spotId spotId1] [--spotId spotId2] ... [--calendar calendarId1] [--calendar calendarId2] ... (--today | --tomorrow | --week | --on dd/mm/yyyy)',
         );
         console.log('');
         console.log('Examples:');
-        console.log('  Single spot:   ./surfcal --spotId 5842041f4e65fad6a7708876 --today');
-        console.log('  Multiple spots: ./surfcal --spotId 5842041f4e65fad6a7708876 --spotId 5842041f4e65fad6a7708815 --week');
+        console.log(
+          '  Single spot:     ./surfcal --spotId 5842041f4e65fad6a7708876 --today',
+        );
+        console.log(
+          '  Multiple spots:  ./surfcal --spotId 5842041f4e65fad6a7708876 --spotId 5842041f4e65fad6a7708815 --week',
+        );
+        console.log(
+          '  With calendar:   ./surfcal --spotId 5842041f4e65fad6a7708876 --calendar benjamin.groehbiel@gmail.com --today',
+        );
+        console.log(
+          '  Multiple cals:   ./surfcal --spotId 5842041f4e65fad6a7708876 --calendar cal1@gmail.com --calendar cal2@gmail.com --week',
+        );
+        console.log('');
+        console.log('Options:');
+        console.log(
+          '  --spotId      Surf spot ID (can be used multiple times)',
+        );
+        console.log(
+          '  --calendar    Google Calendar ID to filter out busy times (can be used multiple times)',
+        );
+        console.log('  --today       Show surfable hours for today');
+        console.log('  --tomorrow    Show surfable hours for tomorrow');
+        console.log('  --week        Show surfable hours for the next 7 days');
+        console.log(
+          '  --on DATE     Show surfable hours for a specific date (dd/mm/yyyy)',
+        );
         console.log('');
         console.log('Popular spot IDs:');
         console.log('  Malibu:        5842041f4e65fad6a7708876');
@@ -352,7 +500,7 @@ export const runCLI = async (args: string[], surflineClient: SurflineClient): Pr
 
       return {
         success: true,
-        output: output.trim()
+        output: output.trim(),
       };
     } finally {
       // Restore console functions
@@ -364,7 +512,7 @@ export const runCLI = async (args: string[], surflineClient: SurflineClient): Pr
     return {
       success: false,
       output: '',
-      error: error instanceof Error ? error.message : 'Unknown error occurred'
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
     };
   }
 };

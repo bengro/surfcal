@@ -1,5 +1,4 @@
 import { GoogleCalendarClient } from './google_calendar_client';
-import { findFreeSlots } from './free_slot_finder';
 import { TimeSlot } from './types';
 
 interface CalendarEvent {
@@ -25,10 +24,14 @@ export class GoogleCalendarHttpClient implements GoogleCalendarClient {
     this.apiKey = apiKey;
   }
 
-  public async getFreeSlots(calendarIds: string[]): Promise<TimeSlot[]> {
+  public async getBusySlots(calendarIds: string[]): Promise<TimeSlot[]> {
     const busySlots: TimeSlot[] = [];
+
+    const now = new Date();
+    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
     for (const calendarId of calendarIds) {
-      const url = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?key=${this.apiKey}`;
+      const url = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?key=${this.apiKey}&timeMin=${now.toISOString()}&timeMax=${sevenDaysFromNow.toISOString()}&singleEvents=true&orderBy=startTime`;
       const response = await fetch(url);
       const data: CalendarAPIResponse = await response.json();
 
@@ -45,6 +48,6 @@ export class GoogleCalendarHttpClient implements GoogleCalendarClient {
       }
     }
 
-    return findFreeSlots(busySlots, new Date(), 7);
+    return busySlots;
   }
 }

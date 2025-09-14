@@ -38,13 +38,14 @@ describe.each(clients)('$name Contract Tests', ({ client }) => {
     expect(client).toBeDefined();
   });
 
-  it('should fetch free slots for a calendar, slots of minimum 2h', async () => {
-    const freeSlots = await client.getFreeSlots([calendarId]);
-    expect(freeSlots).toBeDefined();
-    freeSlots.forEach((slot) => {
-      const durationInMs = slot.end.getTime() - slot.start.getTime();
-      const durationInHours = durationInMs / (1000 * 60 * 60);
-      expect(durationInHours).toBeGreaterThanOrEqual(2);
+  it('should fetch busy slots for a calendar', async () => {
+    const busySlots = await client.getBusySlots([calendarId]);
+    expect(busySlots).toBeDefined();
+    expect(Array.isArray(busySlots)).toBe(true);
+    busySlots.forEach((slot) => {
+      expect(slot.start).toBeInstanceOf(Date);
+      expect(slot.end).toBeInstanceOf(Date);
+      expect(slot.start.getTime()).toBeLessThan(slot.end.getTime());
     });
   });
 });

@@ -29,7 +29,7 @@ class SurfcalMCPServer {
           tools: {},
           resources: {},
         },
-      }
+      },
     );
 
     this.setupToolHandlers();
@@ -45,7 +45,7 @@ class SurfcalMCPServer {
     if (!process.env.SURFLINE_EMAIL || !process.env.SURFLINE_PASSWORD) {
       throw new McpError(
         ErrorCode.InvalidRequest,
-        'SURFLINE_EMAIL and SURFLINE_PASSWORD environment variables are required'
+        'SURFLINE_EMAIL and SURFLINE_PASSWORD environment variables are required',
       );
     }
 
@@ -53,12 +53,12 @@ class SurfcalMCPServer {
     try {
       await this.surflineClient.login(
         process.env.SURFLINE_EMAIL,
-        process.env.SURFLINE_PASSWORD
+        process.env.SURFLINE_PASSWORD,
       );
     } catch (error) {
       throw new McpError(
         ErrorCode.InternalError,
-        `Failed to authenticate with Surfline: ${error}`
+        `Failed to authenticate with Surfline: ${error}`,
       );
     }
   }
@@ -83,7 +83,8 @@ class SurfcalMCPServer {
           },
           {
             name: 'get_surfable_hours_tomorrow',
-            description: 'Get surfable hours for tomorrow at a specific surf spot',
+            description:
+              'Get surfable hours for tomorrow at a specific surf spot',
             inputSchema: {
               type: 'object',
               properties: {
@@ -97,7 +98,8 @@ class SurfcalMCPServer {
           },
           {
             name: 'get_surfable_hours_week',
-            description: 'Get surfable hours for the next 7 days at a specific surf spot',
+            description:
+              'Get surfable hours for the next 7 days at a specific surf spot',
             inputSchema: {
               type: 'object',
               properties: {
@@ -111,7 +113,8 @@ class SurfcalMCPServer {
           },
           {
             name: 'get_surfable_hours_date',
-            description: 'Get surfable hours for a specific date at a specific surf spot',
+            description:
+              'Get surfable hours for a specific date at a specific surf spot',
             inputSchema: {
               type: 'object',
               properties: {
@@ -149,12 +152,15 @@ class SurfcalMCPServer {
             return await this.getSurfableHoursWeek(args?.spotId as string);
 
           case 'get_surfable_hours_date':
-            return await this.getSurfableHoursDate(args?.spotId as string, args?.date as string);
+            return await this.getSurfableHoursDate(
+              args?.spotId as string,
+              args?.date as string,
+            );
 
           default:
             throw new McpError(
               ErrorCode.MethodNotFound,
-              `Unknown tool: ${name}`
+              `Unknown tool: ${name}`,
             );
         }
       } catch (error) {
@@ -163,7 +169,7 @@ class SurfcalMCPServer {
         }
         throw new McpError(
           ErrorCode.InternalError,
-          `Error executing tool ${name}: ${error}`
+          `Error executing tool ${name}: ${error}`,
         );
       }
     });
@@ -183,61 +189,71 @@ class SurfcalMCPServer {
             uri: 'surfcal://about',
             mimeType: 'text/plain',
             name: 'About Surfcal',
-            description: 'Information about the Surfcal MCP server and its capabilities',
+            description:
+              'Information about the Surfcal MCP server and its capabilities',
           },
         ],
       };
     });
 
-    this.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-      const { uri } = request.params;
+    this.server.setRequestHandler(
+      ReadResourceRequestSchema,
+      async (request) => {
+        const { uri } = request.params;
 
-      switch (uri) {
-        case 'surfcal://spots/popular':
-          return {
-            contents: [
-              {
-                uri,
-                mimeType: 'application/json',
-                text: JSON.stringify({
-                  spots: [
+        switch (uri) {
+          case 'surfcal://spots/popular':
+            return {
+              contents: [
+                {
+                  uri,
+                  mimeType: 'application/json',
+                  text: JSON.stringify(
                     {
-                      name: 'Malibu',
-                      spotId: '5842041f4e65fad6a7708876',
-                      location: 'California, USA',
-                      description: 'Famous right-hand point break in Malibu'
+                      spots: [
+                        {
+                          name: 'Malibu',
+                          spotId: '5842041f4e65fad6a7708876',
+                          location: 'California, USA',
+                          description:
+                            'Famous right-hand point break in Malibu',
+                        },
+                        {
+                          name: 'Pipeline',
+                          spotId: '5842041f4e65fad6a7708815',
+                          location: 'Hawaii, USA',
+                          description:
+                            'World-famous barrel on the North Shore of Oahu',
+                        },
+                        {
+                          name: 'Bells Beach',
+                          spotId: '5842041f4e65fad6a770883d',
+                          location: 'Victoria, Australia',
+                          description:
+                            'Iconic Australian surf break near Torquay',
+                        },
+                        {
+                          name: 'Jeffreys Bay',
+                          spotId: '5842041f4e65fad6a7708962',
+                          location: 'South Africa',
+                          description: 'World-class right-hand point break',
+                        },
+                      ],
                     },
-                    {
-                      name: 'Pipeline',
-                      spotId: '5842041f4e65fad6a7708815',
-                      location: 'Hawaii, USA',
-                      description: 'World-famous barrel on the North Shore of Oahu'
-                    },
-                    {
-                      name: 'Bells Beach',
-                      spotId: '5842041f4e65fad6a770883d',
-                      location: 'Victoria, Australia',
-                      description: 'Iconic Australian surf break near Torquay'
-                    },
-                    {
-                      name: 'Jeffreys Bay',
-                      spotId: '5842041f4e65fad6a7708962',
-                      location: 'South Africa',
-                      description: 'World-class right-hand point break'
-                    }
-                  ]
-                }, null, 2),
-              },
-            ],
-          };
+                    null,
+                    2,
+                  ),
+                },
+              ],
+            };
 
-        case 'surfcal://about':
-          return {
-            contents: [
-              {
-                uri,
-                mimeType: 'text/plain',
-                text: `Surfcal MCP Server
+          case 'surfcal://about':
+            return {
+              contents: [
+                {
+                  uri,
+                  mimeType: 'text/plain',
+                  text: `Surfcal MCP Server
 
 This MCP server provides access to surf condition data from Surfline. It allows AI agents to:
 
@@ -261,17 +277,18 @@ The server filters conditions based on:
 Environment variables required:
 - SURFLINE_EMAIL: Your Surfline account email
 - SURFLINE_PASSWORD: Your Surfline account password`,
-              },
-            ],
-          };
+                },
+              ],
+            };
 
-        default:
-          throw new McpError(
-            ErrorCode.InvalidRequest,
-            `Unknown resource: ${uri}`
-          );
-      }
-    });
+          default:
+            throw new McpError(
+              ErrorCode.InvalidRequest,
+              `Unknown resource: ${uri}`,
+            );
+        }
+      },
+    );
   }
 
   private async getSurfableHoursToday(spotId: string) {
@@ -284,7 +301,7 @@ Environment variables required:
       [spotId],
       this.surflineClient!,
       1,
-      now
+      now,
     );
 
     return {
@@ -308,14 +325,17 @@ Environment variables required:
       [spotId],
       this.surflineClient!,
       7,
-      tomorrowNow
+      tomorrowNow,
     );
 
     return {
       content: [
         {
           type: 'text',
-          text: await this.formatSurfableHoursResponse(surfableHours, 'tomorrow'),
+          text: await this.formatSurfableHoursResponse(
+            surfableHours,
+            'tomorrow',
+          ),
         },
       ],
     };
@@ -331,14 +351,17 @@ Environment variables required:
       [spotId],
       this.surflineClient!,
       7,
-      now
+      now,
     );
 
     return {
       content: [
         {
           type: 'text',
-          text: await this.formatSurfableHoursResponse(surfableHours, 'the next 7 days'),
+          text: await this.formatSurfableHoursResponse(
+            surfableHours,
+            'the next 7 days',
+          ),
         },
       ],
     };
@@ -355,19 +378,23 @@ Environment variables required:
     if (!this.isValidDate(date)) {
       throw new McpError(
         ErrorCode.InvalidParams,
-        'Invalid date format. Use DD/MM/YYYY'
+        'Invalid date format. Use DD/MM/YYYY',
       );
     }
 
     const [day, month, year] = date.split('/');
-    const targetDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    const targetDate = new Date(
+      parseInt(year),
+      parseInt(month) - 1,
+      parseInt(day),
+    );
     const targetNow = targetDate.getTime() / 1000;
 
     const surfableHours = await getSurfableHours(
       [spotId],
       this.surflineClient!,
       7,
-      targetNow
+      targetNow,
     );
 
     return {
@@ -380,45 +407,54 @@ Environment variables required:
     };
   }
 
-  private async formatSurfableHoursResponse(surfableHours: SurfableHour[], timeframe: string): Promise<string> {
+  private async formatSurfableHoursResponse(
+    surfableHours: SurfableHour[],
+    timeframe: string,
+  ): Promise<string> {
     if (surfableHours.length === 0) {
       return `🌊 No surfable hours found for ${timeframe}. The conditions might not be favorable for surfing during this period.`;
     }
 
-    const formattedHours = await Promise.all(surfableHours.map(async (hour) => {
-      const startTime = new Date(hour.startTime * 1000);
-      const endTime = new Date(hour.endTime * 1000);
-      
-      const formatTime = (date: Date) => {
-        return date.toLocaleString('en-GB', {
-          weekday: 'long',
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
-        });
-      };
+    const formattedHours = await Promise.all(
+      surfableHours.map(async (hour) => {
+        const startTime = new Date(hour.startTime * 1000);
+        const endTime = new Date(hour.endTime * 1000);
 
-      const spotName = await this.getSpotName(hour.spotId);
-      const spotDisplay = this.formatSpotDisplay(spotName, hour.spotId);
+        const formatTime = (date: Date) => {
+          return date.toLocaleString('en-GB', {
+            weekday: 'long',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          });
+        };
 
-      return {
-        startTime: formatTime(startTime),
-        endTime: formatTime(endTime),
-        condition: hour.condition,
-        waveHeight: hour.waveHeight,
-        spot: spotDisplay,
-        spotId: hour.spotId,
-      };
-    }));
+        const spotName = await this.getSpotName(hour.spotId);
+        const spotDisplay = this.formatSpotDisplay(spotName, hour.spotId);
 
-    return JSON.stringify({
-      timeframe,
-      surfableHours: formattedHours,
-      count: surfableHours.length,
-    }, null, 2);
+        return {
+          startTime: formatTime(startTime),
+          endTime: formatTime(endTime),
+          condition: hour.condition,
+          waveHeight: hour.waveHeight,
+          spot: spotDisplay,
+          spotId: hour.spotId,
+        };
+      }),
+    );
+
+    return JSON.stringify(
+      {
+        timeframe,
+        surfableHours: formattedHours,
+        count: surfableHours.length,
+      },
+      null,
+      2,
+    );
   }
 
   private isValidDate(dateString: string): boolean {
@@ -434,14 +470,16 @@ Environment variables required:
     if (this.spotNameCache.has(spotId)) {
       return this.spotNameCache.get(spotId)!;
     }
-    
+
     try {
       const spotInfo = await this.surflineClient!.getSpotInfo(spotId);
       const spotName = spotInfo.name;
       this.spotNameCache.set(spotId, spotName);
       return spotName;
     } catch (error) {
-      console.error(`Warning: Could not fetch name for spot ${spotId}, using ID instead`);
+      console.error(
+        `Warning: Could not fetch name for spot ${spotId}, using ID instead`,
+      );
       return spotId;
     }
   }

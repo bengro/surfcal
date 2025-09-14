@@ -1,5 +1,4 @@
 import { GoogleCalendarClient } from './google_calendar_client';
-import { findFreeSlots } from './free_slot_finder';
 import { TimeSlot } from './types';
 
 export class GoogleCalendarFakeClient implements GoogleCalendarClient {
@@ -11,7 +10,8 @@ export class GoogleCalendarFakeClient implements GoogleCalendarClient {
     this.now = now || new Date();
   }
 
-  public async getFreeSlots(calendarIds: string[]): Promise<TimeSlot[]> {
-    return findFreeSlots(this.busySlots, this.now, 7);
+  public async getBusySlots(calendarIds: string[]): Promise<TimeSlot[]> {
+    // Return the busy slots that were configured in the constructor
+    return this.busySlots;
   }
 }
