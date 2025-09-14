@@ -1,6 +1,16 @@
 # Surfcal
 
-Surfcal is a command-line tool and MCP (Model Context Protocol) server that integrates with Surfline to fetch surfable hours for specified surf spots. It can display surfable hours for today, tomorrow, the next 7 days, or a specific date, using data from Surfline's API. The tool supports checking multiple surf spots simultaneously and provides AI-powered surf session scheduling through MCP integration.
+🏄‍♂️ **Never miss the perfect wave again!** Surfcal is your intelligent surf forecasting companion that combines real-time Surfline data with your Google Calendar to find the exact moments when epic surf conditions align with your free time.
+
+Whether you're chasing dawn patrol sessions, planning weekend surf trips, or comparing conditions across multiple breaks, Surfcal delivers precise surfable hour predictions with smart calendar conflict detection. Get visual indicators for when great waves clash with meetings, so you can make informed decisions about rescheduling that Zoom call for overhead barrels!
+
+✨ **Features that will revolutionize your surf planning:**
+- 🌊 Real-time surf condition analysis from Surfline's premium data
+- 📅 Smart calendar integration that shows conflicts without hiding opportunities  
+- 🎯 Multi-spot comparisons to find the best waves in your area
+- 🤖 AI-powered session scheduling through MCP integration
+- ⚡ Lightning-fast CLI for quick condition checks
+- 🔮 7-day forecasting to plan your entire surf week
 
 ## Prerequisites
 
@@ -249,6 +259,22 @@ Once configured with Claude Desktop, you can ask:
 - _"Check surf conditions at Malibu for tomorrow and schedule a 2-hour surf session if conditions are good and I'm free"_
 - _"Look at surf conditions for the next 7 days at California spots and schedule sessions when waves are 3+ feet"_
 - _"Plan my weekend: find the best surf conditions and schedule sessions when I'm available"_
+
+#### 🤖 AI Agent Vision: The Future of Intelligent Surf Planning
+
+Surfcal's MCP server is designed with a **separation of concerns** architecture that enables powerful AI agent workflows. Rather than building calendar integration directly into the Surfcal MCP server, we envision AI agents acting as intelligent brokers between specialized MCP servers:
+
+**🏗️ Modular Architecture:**
+- **Surfcal MCP Server**: Pure surf condition data provider (wave heights, conditions, surfable hours)
+- **Google Calendar MCP Server**: Pure calendar data provider (meetings, availability, scheduling)
+- **AI Agent**: Intelligent broker that combines both data sources for smart recommendations
+
+**🧠 Intelligent Brokering Examples:**
+- _"There are 4ft waves at Malibu from 2-4pm, but you have a meeting from 3-4pm. Should I reschedule your meeting to catch these epic conditions?"_
+- _"I found perfect dawn patrol conditions at Pipeline tomorrow 6-8am, and your calendar is free. Want me to book travel and block your calendar?"_
+- _"Your usual surf spots are flat this week, but I found firing conditions at Jeffreys Bay. Should I check flight prices and move your meetings?"_
+
+- This architecture keeps Surfcal focused on delivering the best surf forecasting data while enabling limitless AI-powered surf planning possibilities!
 
 ## Available Scripts
 
