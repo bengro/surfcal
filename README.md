@@ -5,14 +5,16 @@
 Whether you're chasing dawn patrol sessions, planning weekend surf trips, or comparing conditions across multiple breaks, Surfcal delivers precise surfable hour predictions with smart calendar conflict detection. Get visual indicators for when great waves clash with meetings, so you can make informed decisions about rescheduling that Zoom call for overhead barrels!
 
 ✨ **Features that will revolutionize your surf planning:**
+
 - 🌊 Real-time surf condition analysis from Surfline's premium data
-- 📅 Smart calendar integration that shows conflicts without hiding opportunities  
+- 📅 Smart calendar integration that shows conflicts without hiding opportunities
 - 🎯 Multi-spot comparisons to find the best waves in your area
 - 🤖 AI-powered session scheduling through MCP integration
 - ⚡ Lightning-fast CLI for quick condition checks
 - 🔮 7-day forecasting to plan your entire surf week
 
 Example:
+
 ```
 npx surfcal --spotId 584204214e65fad6a7709cef --spotId 584204204e65fad6a77090bc --spotId 584204204e65fad6a77090bc --week --wave-min 3 --rating-min FAIR
 ```
@@ -138,16 +140,19 @@ surfcal [--spotId spotId1] [--spotId spotId2] ... [--calendar calendarId1] [--ca
 The CLI now supports customizable surf criteria to match your preferences and skill level:
 
 1. **Higher wave requirements** (for experienced surfers):
+
    ```
    surfcal --spotId 5842041f4e65fad6a7708876 --wave-min 4 --rating-min GOOD --today
    ```
 
 2. **Lower wave requirements** (for beginners):
+
    ```
    surfcal --spotId 5842041f4e65fad6a7708876 --wave-min 1.5 --rating-min POOR --today
    ```
 
 3. **Premium conditions only** (for epic sessions):
+
    ```
    surfcal --spotId 5842041f4e65fad6a7708876 --wave-min 6 --rating-min VERY_GOOD --week
    ```
@@ -299,11 +304,13 @@ Once configured with Claude Desktop, you can ask:
 Surfcal's MCP server is designed with a **separation of concerns** architecture that enables powerful AI agent workflows. Rather than building calendar integration directly into the Surfcal MCP server, we envision AI agents acting as intelligent brokers between specialized MCP servers:
 
 **🏗️ Modular Architecture:**
+
 - **Surfcal MCP Server**: Pure surf condition data provider (wave heights, conditions, surfable hours)
 - **Google Calendar MCP Server**: Pure calendar data provider (meetings, availability, scheduling)
 - **AI Agent**: Intelligent broker that combines both data sources for smart recommendations
 
 **🧠 Intelligent Brokering Examples:**
+
 - _"There are 4ft waves at Malibu from 2-4pm, but you have a meeting from 3-4pm. Should I reschedule your meeting to catch these epic conditions?"_
 - _"I found perfect dawn patrol conditions at Pipeline tomorrow 6-8am, and your calendar is free. Want me to book travel and block your calendar?"_
 - _"Your usual surf spots are flat this week, but I found firing conditions at Jeffreys Bay. Should I check flight prices and move your meetings?"_

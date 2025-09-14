@@ -1,6 +1,6 @@
 import { getSurfableHours } from './get_surfable_hours';
 import { SurflineFakeClient } from '../infrastructure/surfline_client/fake_client';
-import { SurfCriteria } from './types';
+import { SurfCriteria, DEFAULT_SURF_CRITERIA } from './types';
 import {
   Rating,
   Sunlight,
@@ -695,7 +695,7 @@ describe('getSurfableHours', () => {
       ]);
 
       // With default criteria (2ft min), should return the hour
-      const defaultCriteria: SurfCriteria = { minWaveHeight: 2, minRating: 'POOR_TO_FAIR' };
+      const defaultCriteria: SurfCriteria = DEFAULT_SURF_CRITERIA;
       const surfableHoursDefault = await getSurfableHours(
         [spotId],
         client,
@@ -706,7 +706,10 @@ describe('getSurfableHours', () => {
       expect(surfableHoursDefault).toHaveLength(1);
 
       // With higher criteria (3ft min), should not return the hour
-      const strictCriteria: SurfCriteria = { minWaveHeight: 3, minRating: 'POOR_TO_FAIR' };
+      const strictCriteria: SurfCriteria = {
+        minWaveHeight: 3,
+        minRating: 'POOR_TO_FAIR',
+      };
       const surfableHoursStrict = await getSurfableHours(
         [spotId],
         client,
@@ -756,7 +759,7 @@ describe('getSurfableHours', () => {
       ]);
 
       // With default criteria (POOR_TO_FAIR min), should return the hour
-      const defaultCriteria: SurfCriteria = { minWaveHeight: 2, minRating: 'POOR_TO_FAIR' };
+      const defaultCriteria: SurfCriteria = DEFAULT_SURF_CRITERIA;
       const surfableHoursDefault = await getSurfableHours(
         [spotId],
         client,
@@ -767,7 +770,10 @@ describe('getSurfableHours', () => {
       expect(surfableHoursDefault).toHaveLength(1);
 
       // With higher criteria (GOOD min), should not return the hour
-      const strictCriteria: SurfCriteria = { minWaveHeight: 2, minRating: 'GOOD' };
+      const strictCriteria: SurfCriteria = {
+        minWaveHeight: 2,
+        minRating: 'GOOD',
+      };
       const surfableHoursStrict = await getSurfableHours(
         [spotId],
         client,

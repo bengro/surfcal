@@ -2,7 +2,7 @@ import { getSurfableHours } from '../../domain/get_surfable_hours';
 import { SurflineClient } from '../../infrastructure/surfline_client/surfline_client';
 import { GoogleCalendarClient } from '../../infrastructure/google_calendar_client/google_calendar_client';
 import { SurfableHoursWithCalendarService } from '../../application/surfable_hours_with_calendar_service';
-import { SurfCriteria } from '../../domain/types';
+import { SurfCriteria, DEFAULT_SURF_CRITERIA } from '../../domain/types';
 
 // Cache for spot names to avoid repeated API calls
 const spotNameCache = new Map<string, string>();
@@ -168,7 +168,9 @@ export const runCLI = async (
               error: 'Error: --rating-min requires a rating value.',
             };
           }
-          const ratingValue = args[i + 1].toUpperCase() as SurfCriteria['minRating'];
+          const ratingValue = args[
+            i + 1
+          ].toUpperCase() as SurfCriteria['minRating'];
           const validRatings: SurfCriteria['minRating'][] = [
             'VERY_POOR',
             'POOR',
@@ -193,8 +195,8 @@ export const runCLI = async (
 
       // Create surf criteria with defaults or user-specified values
       const criteria: SurfCriteria = {
-        minWaveHeight: waveMin ?? 2,
-        minRating: ratingMin ?? 'POOR_TO_FAIR',
+        minWaveHeight: waveMin ?? DEFAULT_SURF_CRITERIA.minWaveHeight,
+        minRating: ratingMin ?? DEFAULT_SURF_CRITERIA.minRating,
       };
 
       // Create calendar service if calendar IDs are provided
@@ -541,13 +543,13 @@ export const runCLI = async (
         console.log(
           '  --calendar    Google Calendar ID to filter out busy times (can be used multiple times)',
         );
-        console.log(
-          '  --wave-min    Minimum wave height in feet (default: 2)',
-        );
+        console.log('  --wave-min    Minimum wave height in feet (default: 2)');
         console.log(
           '  --rating-min  Minimum surf rating (default: POOR_TO_FAIR)',
         );
-        console.log('                Valid ratings: VERY_POOR, POOR, POOR_TO_FAIR, FAIR, GOOD, VERY_GOOD');
+        console.log(
+          '                Valid ratings: VERY_POOR, POOR, POOR_TO_FAIR, FAIR, GOOD, VERY_GOOD',
+        );
         console.log('  --today       Show surfable hours for today');
         console.log('  --tomorrow    Show surfable hours for tomorrow');
         console.log('  --week        Show surfable hours for the next 7 days');

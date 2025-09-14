@@ -11,7 +11,11 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { getSurfableHours } from '../../domain/get_surfable_hours.js';
 import { SurflineHttpClient } from '../../infrastructure/surfline_client/http_client.js';
-import { SurfableHour, SurfCriteria } from '../../domain/types.js';
+import {
+  SurfableHour,
+  SurfCriteria,
+  DEFAULT_SURF_CRITERIA,
+} from '../../domain/types.js';
 
 class SurfcalMCPServer {
   private server: Server;
@@ -85,7 +89,14 @@ class SurfcalMCPServer {
                 ratingMin: {
                   type: 'string',
                   description: 'Minimum surf rating (default: POOR_TO_FAIR)',
-                  enum: ['VERY_POOR', 'POOR', 'POOR_TO_FAIR', 'FAIR', 'GOOD', 'VERY_GOOD'],
+                  enum: [
+                    'VERY_POOR',
+                    'POOR',
+                    'POOR_TO_FAIR',
+                    'FAIR',
+                    'GOOD',
+                    'VERY_GOOD',
+                  ],
                 },
               },
               required: ['spotId'],
@@ -110,7 +121,14 @@ class SurfcalMCPServer {
                 ratingMin: {
                   type: 'string',
                   description: 'Minimum surf rating (default: POOR_TO_FAIR)',
-                  enum: ['VERY_POOR', 'POOR', 'POOR_TO_FAIR', 'FAIR', 'GOOD', 'VERY_GOOD'],
+                  enum: [
+                    'VERY_POOR',
+                    'POOR',
+                    'POOR_TO_FAIR',
+                    'FAIR',
+                    'GOOD',
+                    'VERY_GOOD',
+                  ],
                 },
               },
               required: ['spotId'],
@@ -135,7 +153,14 @@ class SurfcalMCPServer {
                 ratingMin: {
                   type: 'string',
                   description: 'Minimum surf rating (default: POOR_TO_FAIR)',
-                  enum: ['VERY_POOR', 'POOR', 'POOR_TO_FAIR', 'FAIR', 'GOOD', 'VERY_GOOD'],
+                  enum: [
+                    'VERY_POOR',
+                    'POOR',
+                    'POOR_TO_FAIR',
+                    'FAIR',
+                    'GOOD',
+                    'VERY_GOOD',
+                  ],
                 },
               },
               required: ['spotId'],
@@ -165,7 +190,14 @@ class SurfcalMCPServer {
                 ratingMin: {
                   type: 'string',
                   description: 'Minimum surf rating (default: POOR_TO_FAIR)',
-                  enum: ['VERY_POOR', 'POOR', 'POOR_TO_FAIR', 'FAIR', 'GOOD', 'VERY_GOOD'],
+                  enum: [
+                    'VERY_POOR',
+                    'POOR',
+                    'POOR_TO_FAIR',
+                    'FAIR',
+                    'GOOD',
+                    'VERY_GOOD',
+                  ],
                 },
               },
               required: ['spotId', 'date'],
@@ -355,8 +387,8 @@ Environment variables required:
     }
 
     const criteria: SurfCriteria = {
-      minWaveHeight: waveMin ?? 2,
-      minRating: ratingMin ?? 'POOR_TO_FAIR',
+      minWaveHeight: waveMin ?? DEFAULT_SURF_CRITERIA.minWaveHeight,
+      minRating: ratingMin ?? DEFAULT_SURF_CRITERIA.minRating,
     };
 
     const now = Date.now() / 1000;
@@ -388,8 +420,8 @@ Environment variables required:
     }
 
     const criteria: SurfCriteria = {
-      minWaveHeight: waveMin ?? 2,
-      minRating: ratingMin ?? 'POOR_TO_FAIR',
+      minWaveHeight: waveMin ?? DEFAULT_SURF_CRITERIA.minWaveHeight,
+      minRating: ratingMin ?? DEFAULT_SURF_CRITERIA.minRating,
     };
 
     const now = Date.now() / 1000;
@@ -425,8 +457,8 @@ Environment variables required:
     }
 
     const criteria: SurfCriteria = {
-      minWaveHeight: waveMin ?? 2,
-      minRating: ratingMin ?? 'POOR_TO_FAIR',
+      minWaveHeight: waveMin ?? DEFAULT_SURF_CRITERIA.minWaveHeight,
+      minRating: ratingMin ?? DEFAULT_SURF_CRITERIA.minRating,
     };
 
     const now = Date.now() / 1000;
@@ -472,8 +504,8 @@ Environment variables required:
     }
 
     const criteria: SurfCriteria = {
-      minWaveHeight: waveMin ?? 2,
-      minRating: ratingMin ?? 'POOR_TO_FAIR',
+      minWaveHeight: waveMin ?? DEFAULT_SURF_CRITERIA.minWaveHeight,
+      minRating: ratingMin ?? DEFAULT_SURF_CRITERIA.minRating,
     };
 
     const [day, month, year] = date.split('/');
