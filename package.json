@@ -4,9 +4,11 @@
   "description": "",
   "main": "dist/index.js",
   "bin": {
-    "surfcal": "dist/cli/index.js"
+    "surfcal": "dist/presentation/cli/index.js",
+    "surfcal-mcp": "dist/presentation/mcp/server.js"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
     "asynckit": "^0.4.0",
     "axios": "^1.11.0",
     "call-bind-apply-helpers": "^1.0.2",
@@ -46,8 +48,10 @@
   },
   "scripts": {
     "build": "tsc",
-    "start": "npm run build && node dist/cli/index.js",
+    "start": "npm run build && node dist/presentation/cli/index.js",
+    "start:mcp": "npm run build && node dist/presentation/mcp/server.js",
     "test": "jest",
+    "test:mcp": "node test-mcp.js",
     "lint": "prettier --check .",
     "lint:fix": "prettier --write ."
   },

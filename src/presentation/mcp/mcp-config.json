@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "surfcal": {
+      "command": "node",
+      "args": ["dist/presentation/mcp/server.js"],
+      "env": {
+        "SURFLINE_EMAIL": "${SURFLINE_EMAIL}",
+        "SURFLINE_PASSWORD": "${SURFLINE_PASSWORD}"
+      }
+    }
+  }
+}

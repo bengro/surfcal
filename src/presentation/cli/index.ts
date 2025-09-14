@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { getSurfableHours } from '../domain/get_surfable_hours';
-import { SurflineHttpClient } from '../infrastructure/surfline_client/http_client';
+import { getSurfableHours } from '../../domain/get_surfable_hours';
+import { SurflineHttpClient } from '../../infrastructure/surfline_client/http_client';
 
 const toHumanReadable = (timestamp: number): string => {
   const date = new Date(timestamp * 1000);
