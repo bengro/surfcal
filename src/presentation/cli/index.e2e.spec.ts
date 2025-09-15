@@ -4,6 +4,7 @@ import {
   Rating,
   Sunlight,
   SurfData,
+  Wind,
 } from '../../infrastructure/surfline_client/types';
 import { GoogleCalendarFakeClient } from '../../infrastructure/google_calendar_client/fake_client';
 import { TimeSlot } from '../../infrastructure/google_calendar_client/types';
@@ -374,6 +375,17 @@ describe('CLI End-to-End Tests', () => {
             raw: { min: 2, max: 4 },
           },
         } as SurfData,
+      ]);
+      fakeSurflineClient.setWind([
+        {
+          timestamp: goodTimestamp,
+          utcOffset: 0,
+          speed: 12,
+          direction: 180,
+          directionType: 'ONSHORE',
+          gust: 18,
+          optimalScore: 2,
+        } as Wind,
       ]);
 
       const result = await runCLI(

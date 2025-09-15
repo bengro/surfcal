@@ -341,11 +341,12 @@ class SurfcalMCPServer {
                   mimeType: 'text/plain',
                   text: `Surfcal MCP Server
 
-This MCP server provides access to surf condition data from Surfline. It allows AI agents to:
+This MCP server provides access to comprehensive surf condition data from Surfline. It allows AI agents to:
 
 1. Get surfable hours for today, tomorrow, or a specific date
 2. Get surfable hours for the next 7 days
 3. Access information about popular surf spots
+4. Get detailed wind data including speed, direction, and onshore/offshore classification
 
 Available Tools:
 - get_surfable_hours_today: Get today's surfable conditions
@@ -353,11 +354,19 @@ Available Tools:
 - get_surfable_hours_week: Get next 7 days of surfable conditions
 - get_surfable_hours_date: Get conditions for a specific date
 
-All tools require a spotId parameter (Surfline spot ID).
+All tools require a spotId parameter (Surfline spot ID) and optionally accept:
+- waveMin: Minimum wave height in feet (default: 2)
+- ratingMin: Minimum surf rating (default: POOR_TO_FAIR)
+
+Wind Data Included:
+- Wind speed in knots (kts)
+- Wind direction in degrees and compass abbreviation
+- Wind type classification (offshore, onshore, cross-shore)
+- Formatted wind info for easy interpretation
 
 The server filters conditions based on:
-- Minimum wave height of 2 feet
-- Minimum rating of "Poor to Fair" or better
+- Configurable minimum wave height (default: 2 feet)
+- Configurable minimum rating (default: "Poor to Fair" or better)
 - Daylight hours only
 
 Environment variables required:
@@ -562,11 +571,17 @@ Environment variables required:
         const spotName = await this.getSpotName(hour.spotId);
         const spotDisplay = this.formatSpotDisplay(spotName, hour.spotId);
 
+        const windInfo = this.formatWindInfo(hour.windSpeed, hour.windDirection, hour.windDirectionType);
+
         return {
           startTime: formatTime(startTime),
           endTime: formatTime(endTime),
           condition: hour.condition,
           waveHeight: hour.waveHeight,
+          windSpeed: hour.windSpeed,
+          windDirection: hour.windDirection,
+          windDirectionType: hour.windDirectionType,
+          windInfo: windInfo,
           spot: spotDisplay,
           spotId: hour.spotId,
         };
@@ -613,6 +628,36 @@ Environment variables required:
 
   private formatSpotDisplay(spotName: string, spotId: string): string {
     return spotName === spotId ? spotId : `${spotName} (${spotId})`;
+  }
+
+  private formatWindInfo(windSpeed: number, windDirection: number, windDirectionType: string): string {
+    const getWindDirectionAbbreviation = (degrees: number): string => {
+      const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+      const index = Math.round(degrees / 22.5) % 16;
+      return directions[index];
+    };
+
+    const formatWindDirectionType = (type: string): string => {
+      switch (type.toUpperCase()) {
+        case 'OFFSHORE':
+        case 'OFFSHORE_WIND':
+          return 'offshore';
+        case 'ONSHORE':
+        case 'ONSHORE_WIND':
+          return 'onshore';
+        case 'CROSS_SHORE':
+        case 'CROSS-SHORE':
+        case 'CROSS SHORE':
+          return 'cross-shore';
+        default:
+          return type.toLowerCase();
+      }
+    };
+
+    const directionAbbr = getWindDirectionAbbreviation(windDirection);
+    const formattedType = formatWindDirectionType(windDirectionType);
+    
+    return `${Math.round(windSpeed)} kts ${directionAbbr} (${formattedType})`;
   }
 
   private setupErrorHandling(): void {

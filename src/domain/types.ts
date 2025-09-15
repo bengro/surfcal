@@ -4,6 +4,9 @@ export interface SurfableHour {
   spotId: string;
   condition: string;
   waveHeight: number;
+  windSpeed: number; // in mph or km/h depending on API
+  windDirection: number; // in degrees (0-360)
+  windDirectionType: string; // e.g., "onshore", "offshore", "cross-shore"
   calendarConflict?: boolean; // Optional field to mark calendar conflicts
 }
 

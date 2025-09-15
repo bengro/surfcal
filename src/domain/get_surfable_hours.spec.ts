@@ -5,6 +5,7 @@ import {
   Rating,
   Sunlight,
   SurfData,
+  Wind,
 } from '../infrastructure/surfline_client/types';
 
 describe('getSurfableHours', () => {
@@ -45,6 +46,17 @@ describe('getSurfableHours', () => {
         },
       } as SurfData,
     ]);
+    client.setWind([
+      {
+        timestamp: goodTimestamp,
+        utcOffset: 0,
+        speed: 12,
+        direction: 180,
+        directionType: 'ONSHORE',
+        gust: 18,
+        optimalScore: 2,
+      } as Wind,
+    ]);
 
     const surfableHours = await getSurfableHours(
       [spotId],
@@ -59,6 +71,9 @@ describe('getSurfableHours', () => {
         spotId,
         waveHeight: 3,
         condition: 'GOOD',
+        windSpeed: 12,
+        windDirection: 180,
+        windDirectionType: 'ONSHORE',
       },
     ]);
   });
@@ -139,6 +154,44 @@ describe('getSurfableHours', () => {
         },
       },
     ] as SurfData[]);
+    client.setWind([
+      {
+        timestamp: startTimestamp,
+        utcOffset: 0,
+        speed: 12,
+        direction: 180,
+        directionType: 'ONSHORE',
+        gust: 18,
+        optimalScore: 2,
+      },
+      {
+        timestamp: secondTimestamp,
+        utcOffset: 0,
+        speed: 10,
+        direction: 190,
+        directionType: 'ONSHORE',
+        gust: 15,
+        optimalScore: 3,
+      },
+      {
+        timestamp: thirdTimestamp,
+        utcOffset: 0,
+        speed: 8,
+        direction: 200,
+        directionType: 'CROSS_SHORE',
+        gust: 12,
+        optimalScore: 4,
+      },
+      {
+        timestamp: fourthTimestamp,
+        utcOffset: 0,
+        speed: 15,
+        direction: 170,
+        directionType: 'ONSHORE',
+        gust: 20,
+        optimalScore: 2,
+      },
+    ] as Wind[]);
 
     const surfableHours = await getSurfableHours(
       [spotId],
@@ -269,6 +322,17 @@ describe('getSurfableHours', () => {
           raw: { min: 2, max: 3 },
         },
       } as SurfData,
+    ]);
+    client.setWind([
+      {
+        timestamp: goodTimestamp,
+        utcOffset: 0,
+        speed: 12,
+        direction: 180,
+        directionType: 'ONSHORE',
+        gust: 18,
+        optimalScore: 2,
+      } as Wind,
     ]);
 
     const surfableHours = await getSurfableHours(
@@ -493,6 +557,26 @@ describe('getSurfableHours', () => {
         },
       },
     ] as SurfData[]);
+    client.setWind([
+      {
+        timestamp: pastTimestamp,
+        utcOffset: 0,
+        speed: 12,
+        direction: 180,
+        directionType: 'ONSHORE',
+        gust: 18,
+        optimalScore: 2,
+      },
+      {
+        timestamp: futureTimestamp,
+        utcOffset: 0,
+        speed: 10,
+        direction: 190,
+        directionType: 'ONSHORE',
+        gust: 15,
+        optimalScore: 3,
+      },
+    ] as Wind[]);
 
     const surfableHours = await getSurfableHours([spotId], client, 7, now);
     expect(surfableHours).toEqual([
@@ -502,6 +586,9 @@ describe('getSurfableHours', () => {
         spotId,
         waveHeight: 3,
         condition: 'GOOD',
+        windSpeed: 10,
+        windDirection: 190,
+        windDirectionType: 'ONSHORE',
       },
     ]);
   });
@@ -560,6 +647,26 @@ describe('getSurfableHours', () => {
         },
       },
     ] as SurfData[]);
+    client.setWind([
+      {
+        timestamp: todayTimestamp,
+        utcOffset: 0,
+        speed: 12,
+        direction: 180,
+        directionType: 'ONSHORE',
+        gust: 18,
+        optimalScore: 2,
+      },
+      {
+        timestamp: tomorrowTimestamp,
+        utcOffset: 0,
+        speed: 10,
+        direction: 190,
+        directionType: 'ONSHORE',
+        gust: 15,
+        optimalScore: 3,
+      },
+    ] as Wind[]);
 
     // When forDays is 1, should only return today's surfable hours
     const surfableHours = await getSurfableHours([spotId], client, 1, now);
@@ -570,6 +677,9 @@ describe('getSurfableHours', () => {
         spotId,
         waveHeight: 3,
         condition: 'GOOD',
+        windSpeed: 12,
+        windDirection: 180,
+        windDirectionType: 'ONSHORE',
       },
     ]);
   });
@@ -693,6 +803,17 @@ describe('getSurfableHours', () => {
           },
         } as SurfData,
       ]);
+      client.setWind([
+        {
+          timestamp: goodTimestamp,
+          utcOffset: 0,
+          speed: 12,
+          direction: 180,
+          directionType: 'ONSHORE',
+          gust: 18,
+          optimalScore: 2,
+        } as Wind,
+      ]);
 
       // With default criteria (2ft min), should return the hour
       const defaultCriteria: SurfCriteria = DEFAULT_SURF_CRITERIA;
@@ -756,6 +877,17 @@ describe('getSurfableHours', () => {
             raw: { min: 2, max: 3 },
           },
         } as SurfData,
+      ]);
+      client.setWind([
+        {
+          timestamp: goodTimestamp,
+          utcOffset: 0,
+          speed: 12,
+          direction: 180,
+          directionType: 'ONSHORE',
+          gust: 18,
+          optimalScore: 2,
+        } as Wind,
       ]);
 
       // With default criteria (POOR_TO_FAIR min), should return the hour
@@ -821,6 +953,17 @@ describe('getSurfableHours', () => {
           },
         } as SurfData,
       ]);
+      client.setWind([
+        {
+          timestamp: goodTimestamp,
+          utcOffset: 0,
+          speed: 12,
+          direction: 180,
+          directionType: 'ONSHORE',
+          gust: 18,
+          optimalScore: 2,
+        } as Wind,
+      ]);
 
       // Without criteria parameter, should use defaults (2ft, POOR_TO_FAIR)
       const surfableHours = await getSurfableHours(
@@ -836,6 +979,9 @@ describe('getSurfableHours', () => {
         spotId,
         waveHeight: 2,
         condition: 'POOR_TO_FAIR',
+        windSpeed: 12,
+        windDirection: 180,
+        windDirectionType: 'ONSHORE',
       });
     });
   });

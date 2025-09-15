@@ -55,6 +55,22 @@ describe.each(clients)('$name Contract Tests', ({ name, client }) => {
     expect(wind.associated).toBeDefined();
     expect(wind.data.wind).toBeDefined();
     expect(wind.data.wind.length).toBeGreaterThan(0);
+
+    // Test wind data structure
+    const firstWindData = wind.data.wind[0];
+    expect(firstWindData.timestamp).toBeDefined();
+    expect(typeof firstWindData.timestamp).toBe('number');
+    expect(firstWindData.speed).toBeDefined();
+    expect(typeof firstWindData.speed).toBe('number');
+    expect(firstWindData.direction).toBeDefined();
+    expect(typeof firstWindData.direction).toBe('number');
+    expect(firstWindData.direction).toBeGreaterThanOrEqual(0);
+    expect(firstWindData.direction).toBeLessThan(360);
+    expect(firstWindData.directionType).toBeDefined();
+    expect(typeof firstWindData.directionType).toBe('string');
+    // Check that directionType is one of the expected values (case-insensitive)
+    const validDirectionTypes = ['ONSHORE', 'OFFSHORE', 'CROSS_SHORE', 'Cross-shore', 'Onshore', 'Offshore'];
+    expect(validDirectionTypes).toContain(firstWindData.directionType);
   }, 30000);
 
   it('should fetch spot info for a spot after logging in', async () => {

@@ -7,6 +7,7 @@ import {
   SurfResponse,
   TideResponse,
   WeatherResponse,
+  Wind,
   WindResponse,
   SpotResponse,
 } from './types';
@@ -118,7 +119,7 @@ export class SurflineFakeClient implements SurflineClient {
     data: {
       wind: [
         {
-          timestamp: 1672531200,
+          timestamp: 1672560000, // Matches first rating timestamp
           utcOffset: 0,
           speed: 12,
           direction: 180,
@@ -127,7 +128,7 @@ export class SurflineFakeClient implements SurflineClient {
           optimalScore: 2,
         },
         {
-          timestamp: 1672534800,
+          timestamp: 1672563600, // Matches second rating timestamp
           utcOffset: 0,
           speed: 10,
           direction: 190,
@@ -176,6 +177,7 @@ export class SurflineFakeClient implements SurflineClient {
   private sunlightResponse: SunlightResponse =
     SurflineFakeClient.SUNLIGHT_RESPONSE;
   private surfResponse: SurfResponse = SurflineFakeClient.SURF_RESPONSE;
+  private windResponse: WindResponse = SurflineFakeClient.WIND_RESPONSE;
 
   private loggedIn = false;
 
@@ -201,6 +203,15 @@ export class SurflineFakeClient implements SurflineClient {
       ...SurflineFakeClient.SURF_RESPONSE,
       data: {
         surf: surfData,
+      },
+    };
+  }
+
+  public setWind(windData: Wind[]): void {
+    this.windResponse = {
+      ...SurflineFakeClient.WIND_RESPONSE,
+      data: {
+        wind: windData,
       },
     };
   }
@@ -256,7 +267,7 @@ export class SurflineFakeClient implements SurflineClient {
     intervalHours: number,
   ): Promise<WindResponse> {
     this.checkLogin();
-    return SurflineFakeClient.WIND_RESPONSE;
+    return this.windResponse;
   }
 
   public async getSurf(

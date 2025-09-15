@@ -13,6 +13,9 @@ describe('CalendarFilterService', () => {
     spotId,
     condition: 'Fair',
     waveHeight: 3,
+    windSpeed: 10,
+    windDirection: 180,
+    windDirectionType: 'ONSHORE',
   });
 
   const createTimeSlot = (start: string, end: string): TimeSlot => ({
@@ -163,6 +166,9 @@ describe('CalendarFilterService', () => {
           spotId: 'malibu-123',
           condition: 'Good',
           waveHeight: 4.5,
+          windSpeed: 10,
+          windDirection: 180,
+          windDirectionType: 'ONSHORE',
         },
       ];
       const busySlots: TimeSlot[] = [
@@ -181,6 +187,9 @@ describe('CalendarFilterService', () => {
         spotId: 'malibu-123',
         condition: 'Good',
         waveHeight: 4.5,
+        windSpeed: 10,
+        windDirection: 180,
+        windDirectionType: 'ONSHORE',
         calendarConflict: false,
       });
     });

@@ -32,6 +32,18 @@ const formatSpotDisplay = (spotName: string, spotId: string): string => {
   return spotName === spotId ? spotId : `${spotName} (${spotId})`;
 };
 
+const formatWindDirection = (degrees: number): string => {
+  const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+  const index = Math.round(degrees / 22.5) % 16;
+  return directions[index];
+};
+
+const formatWindInfo = (windSpeed: number, windDirection: number, windDirectionType: string): string => {
+  const directionAbbr = formatWindDirection(windDirection);
+  const windTypeText = windDirectionType === 'OFFSHORE' ? 'offshore' : windDirectionType === 'ONSHORE' ? 'onshore' : 'cross-shore';
+  return `Wind: ${Math.round(windSpeed)} kts ${directionAbbr} (${windTypeText})`;
+};
+
 const toHumanReadable = (timestamp: number): string => {
   const date = new Date(timestamp * 1000);
   const weekday = date.toLocaleDateString('en-GB', { weekday: 'long' });
@@ -286,8 +298,9 @@ export const runCLI = async (
               const conflictSuffix = hour.calendarConflict
                 ? ' [CALENDAR CONFLICT]'
                 : '';
+              const windInfo = formatWindInfo(hour.windSpeed, hour.windDirection, hour.windDirectionType);
               console.log(
-                `  ${conflictIndicator}${hour.humanReadableStartTime} - ${hour.humanReadableEndTime} (${hour.condition}, ${hour.waveHeight}ft)${conflictSuffix}`,
+                `  ${conflictIndicator}${hour.humanReadableStartTime} - ${hour.humanReadableEndTime} (${hour.condition}, ${hour.waveHeight}ft, ${windInfo})${conflictSuffix}`,
               );
             });
           }
@@ -344,8 +357,9 @@ export const runCLI = async (
               const conflictSuffix = hour.calendarConflict
                 ? ' [CALENDAR CONFLICT]'
                 : '';
+              const windInfo = formatWindInfo(hour.windSpeed, hour.windDirection, hour.windDirectionType);
               console.log(
-                `  ${conflictIndicator}${hour.humanReadableStartTime} - ${hour.humanReadableEndTime} (${hour.condition}, ${hour.waveHeight}ft)${conflictSuffix}`,
+                `  ${conflictIndicator}${hour.humanReadableStartTime} - ${hour.humanReadableEndTime} (${hour.condition}, ${hour.waveHeight}ft, ${windInfo})${conflictSuffix}`,
               );
             });
           }
@@ -423,8 +437,9 @@ export const runCLI = async (
               const conflictSuffix = hour.calendarConflict
                 ? ' [CALENDAR CONFLICT]'
                 : '';
+              const windInfo = formatWindInfo(hour.windSpeed, hour.windDirection, hour.windDirectionType);
               console.log(
-                `  ${conflictIndicator}${hour.humanReadableStartTime} - ${hour.humanReadableEndTime} (${hour.condition}, ${hour.waveHeight}ft)${conflictSuffix}`,
+                `  ${conflictIndicator}${hour.humanReadableStartTime} - ${hour.humanReadableEndTime} (${hour.condition}, ${hour.waveHeight}ft, ${windInfo})${conflictSuffix}`,
               );
             });
           }
@@ -503,8 +518,9 @@ export const runCLI = async (
                     const conflictSuffix = hour.calendarConflict
                       ? ' [CALENDAR CONFLICT]'
                       : '';
+                    const windInfo = formatWindInfo(hour.windSpeed, hour.windDirection, hour.windDirectionType);
                     console.log(
-                      `    ${conflictIndicator}${startTime} - ${endTime} (${hour.condition}, ${hour.waveHeight}ft)${conflictSuffix}`,
+                      `    ${conflictIndicator}${startTime} - ${endTime} (${hour.condition}, ${hour.waveHeight}ft, ${windInfo})${conflictSuffix}`,
                     );
                   });
                 }

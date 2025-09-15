@@ -6,6 +6,8 @@ import {
   Wave,
   SurfData,
   SunlightResponse,
+  Wind,
+  WindResponse,
 } from '../infrastructure/surfline_client/types';
 import { SurflineClient } from '../infrastructure/surfline_client/surfline_client';
 import { SurfableHour, SurfCriteria, DEFAULT_SURF_CRITERIA } from './types';
@@ -37,7 +39,7 @@ export const getSurfableHours = async (
   }
 
   for (const spotId of spotIds) {
-    const [ratingsResponse, sunlightResponse, surfResponse] =
+    const [ratingsResponse, sunlightResponse, surfResponse, windResponse] =
       await getAllSurfData(client, spotId, forDays);
 
     for (const hourlyRating of ratingsResponse.data.rating) {
@@ -63,8 +65,13 @@ export const getSurfableHours = async (
       const wave = surfData?.surf;
       const utcOffset = surfData?.utcOffset;
 
+      const windData = windResponse.data.wind.find(
+        (w: Wind) => w.timestamp === timestamp,
+      );
+
       if (
         wave &&
+        windData &&
         isMinimumWaveHeight(wave, criteria.minWaveHeight) &&
         isMinimumRating(hourlyRating, criteria.minRating) &&
         sunlightForDay &&
@@ -76,6 +83,9 @@ export const getSurfableHours = async (
           spotId,
           condition: hourlyRating.rating.key,
           waveHeight: wave.max,
+          windSpeed: windData.speed,
+          windDirection: windData.direction,
+          windDirectionType: windData.directionType,
         });
       }
     }
@@ -134,10 +144,11 @@ const getAllSurfData = async (
   client: SurflineClient,
   spotId: string,
   days: number = 7,
-): Promise<[any, any, any]> => {
+): Promise<[any, any, any, WindResponse]> => {
   return await Promise.all([
     client.getRatings(spotId, days, 1),
     client.getSunlight(spotId, days),
     client.getSurf(spotId, days, 1),
+    client.getWind(spotId, days, 1),
   ]);
 };

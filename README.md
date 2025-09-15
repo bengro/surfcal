@@ -7,6 +7,7 @@ Whether you're chasing dawn patrol sessions, planning weekend surf trips, or com
 ✨ **Features that will revolutionize your surf planning:**
 
 - 🌊 Real-time surf condition analysis from Surfline's premium data
+- 💨 Comprehensive wind data including speed, direction, and onshore/offshore indicators
 - 📅 Smart calendar integration that shows conflicts without hiding opportunities
 - 🎯 Multi-spot comparisons to find the best waves in your area
 - ⚙️ Configurable criteria for wave height and surf rating thresholds
@@ -157,6 +158,7 @@ The CLI now provides enhanced output with:
 - Clear spot identification (📍 emoji)
 - Surfable hours grouped by spot
 - Condition details (rating and wave height)
+- **Comprehensive wind data** (NEW!)
 - **Calendar conflict indicators** (NEW!)
 - Hierarchical display for better readability
 
@@ -167,12 +169,12 @@ Surfable hours for the week (2 spots):
 
 📍 Spot: Malibu (5842041f4e65fad6a7708876)
   📅 Monday, 16/09/2025:
-    🏄 08:00 - 09:00 (FAIR, 3.2ft)
-    🏄 15:00 - 16:00 (GOOD, 4.1ft)
+    🏄 08:00 - 09:00 (FAIR, 3.2ft) - Wind: 8 kts NW (offshore)
+    🏄 15:00 - 16:00 (GOOD, 4.1ft) - Wind: 12 kts W (offshore)
 
 📍 Spot: Pipeline (5842041f4e65fad6a7708815)
   📅 Monday, 16/09/2025:
-    🏄 06:30 - 07:30 (VERY_GOOD, 5.8ft)
+    🏄 06:30 - 07:30 (VERY_GOOD, 5.8ft) - Wind: 15 kts NE (offshore)
 ```
 
 Example output with calendar integration:
@@ -181,10 +183,10 @@ Example output with calendar integration:
 Surfable hours for today (1 spot) (filtered by 2 calendars):
 
 📍 Spot: Malibu (5842041f4e65fad6a7708876)
-  ⚠️ 10:00 - 11:00 (FAIR, 3.2ft) [CALENDAR CONFLICT]
-  🏄 14:00 - 15:00 (GOOD, 4.1ft)
-  🏄 17:00 - 18:00 (FAIR, 3.5ft)
-  ⚠️ 19:00 - 20:00 (GOOD, 4.5ft) [CALENDAR CONFLICT]
+  ⚠️ 10:00 - 11:00 (FAIR, 3.2ft) - Wind: 10 kts SE (onshore) [CALENDAR CONFLICT]
+  🏄 14:00 - 15:00 (GOOD, 4.1ft) - Wind: 8 kts NW (offshore)
+  🏄 17:00 - 18:00 (FAIR, 3.5ft) - Wind: 12 kts W (offshore)
+  ⚠️ 19:00 - 20:00 (GOOD, 4.5ft) - Wind: 15 kts NW (offshore) [CALENDAR CONFLICT]
 ```
 
 #### Visual Indicators:
@@ -199,7 +201,7 @@ If no valid command is provided, the tool displays usage information.
 
 ### MCP Server
 
-Surfcal also provides an MCP (Model Context Protocol) server for AI-powered surf session scheduling. This allows AI agents like Claude to access surf condition data and integrate with calendar systems.
+Surfcal also provides an MCP (Model Context Protocol) server for AI-powered surf session scheduling. This allows AI agents like Claude to access surf condition data and integrate with calendar systems. The MCP server includes comprehensive wind data in all JSON responses for enhanced AI decision-making.
 
 #### MCP Server Usage
 
