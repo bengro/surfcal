@@ -122,7 +122,7 @@ The CLI now supports Google Calendar integration to mark surfable hours that con
 1. **Single calendar integration:**
 
    ```
-   surfcal --spotId 5842041f4e65fad6a7708876 --calendar benjamin.groehbiel@gmail.com --today
+   surfcal --spotId 5842041f4e65fad6a7708876 --calendar my@email.com --today
    ```
 
 2. **Multiple calendars (work + personal):**
@@ -134,7 +134,7 @@ The CLI now supports Google Calendar integration to mark surfable hours that con
 3. **Multiple spots with calendar integration:**
 
    ```
-   surfcal --spotId 5842041f4e65fad6a7708876 --spotId 5842041f4e65fad6a7708815 --calendar benjamin.groehbiel@gmail.com --tomorrow
+   surfcal --spotId 5842041f4e65fad6a7708876 --spotId 5842041f4e65fad6a7708815 --calendar my@email.com --tomorrow
    ```
 
 4. **Plan a surf trip with calendar awareness:**

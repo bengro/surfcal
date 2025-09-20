@@ -33,14 +33,40 @@ const formatSpotDisplay = (spotName: string, spotId: string): string => {
 };
 
 const formatWindDirection = (degrees: number): string => {
-  const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+  const directions = [
+    'N',
+    'NNE',
+    'NE',
+    'ENE',
+    'E',
+    'ESE',
+    'SE',
+    'SSE',
+    'S',
+    'SSW',
+    'SW',
+    'WSW',
+    'W',
+    'WNW',
+    'NW',
+    'NNW',
+  ];
   const index = Math.round(degrees / 22.5) % 16;
   return directions[index];
 };
 
-const formatWindInfo = (windSpeed: number, windDirection: number, windDirectionType: string): string => {
+const formatWindInfo = (
+  windSpeed: number,
+  windDirection: number,
+  windDirectionType: string,
+): string => {
   const directionAbbr = formatWindDirection(windDirection);
-  const windTypeText = windDirectionType === 'OFFSHORE' ? 'offshore' : windDirectionType === 'ONSHORE' ? 'onshore' : 'cross-shore';
+  const windTypeText =
+    windDirectionType === 'OFFSHORE'
+      ? 'offshore'
+      : windDirectionType === 'ONSHORE'
+        ? 'onshore'
+        : 'cross-shore';
   return `Wind: ${Math.round(windSpeed)} kts ${directionAbbr} (${windTypeText})`;
 };
 
@@ -298,7 +324,11 @@ export const runCLI = async (
               const conflictSuffix = hour.calendarConflict
                 ? ' [CALENDAR CONFLICT]'
                 : '';
-              const windInfo = formatWindInfo(hour.windSpeed, hour.windDirection, hour.windDirectionType);
+              const windInfo = formatWindInfo(
+                hour.windSpeed,
+                hour.windDirection,
+                hour.windDirectionType,
+              );
               console.log(
                 `  ${conflictIndicator}${hour.humanReadableStartTime} - ${hour.humanReadableEndTime} (${hour.condition}, ${hour.waveHeight}ft, ${windInfo})${conflictSuffix}`,
               );
@@ -357,7 +387,11 @@ export const runCLI = async (
               const conflictSuffix = hour.calendarConflict
                 ? ' [CALENDAR CONFLICT]'
                 : '';
-              const windInfo = formatWindInfo(hour.windSpeed, hour.windDirection, hour.windDirectionType);
+              const windInfo = formatWindInfo(
+                hour.windSpeed,
+                hour.windDirection,
+                hour.windDirectionType,
+              );
               console.log(
                 `  ${conflictIndicator}${hour.humanReadableStartTime} - ${hour.humanReadableEndTime} (${hour.condition}, ${hour.waveHeight}ft, ${windInfo})${conflictSuffix}`,
               );
@@ -437,7 +471,11 @@ export const runCLI = async (
               const conflictSuffix = hour.calendarConflict
                 ? ' [CALENDAR CONFLICT]'
                 : '';
-              const windInfo = formatWindInfo(hour.windSpeed, hour.windDirection, hour.windDirectionType);
+              const windInfo = formatWindInfo(
+                hour.windSpeed,
+                hour.windDirection,
+                hour.windDirectionType,
+              );
               console.log(
                 `  ${conflictIndicator}${hour.humanReadableStartTime} - ${hour.humanReadableEndTime} (${hour.condition}, ${hour.waveHeight}ft, ${windInfo})${conflictSuffix}`,
               );
@@ -518,7 +556,11 @@ export const runCLI = async (
                     const conflictSuffix = hour.calendarConflict
                       ? ' [CALENDAR CONFLICT]'
                       : '';
-                    const windInfo = formatWindInfo(hour.windSpeed, hour.windDirection, hour.windDirectionType);
+                    const windInfo = formatWindInfo(
+                      hour.windSpeed,
+                      hour.windDirection,
+                      hour.windDirectionType,
+                    );
                     console.log(
                       `    ${conflictIndicator}${startTime} - ${endTime} (${hour.condition}, ${hour.waveHeight}ft, ${windInfo})${conflictSuffix}`,
                     );
@@ -543,7 +585,7 @@ export const runCLI = async (
           '  Multiple spots:  ./surfcal --spotId 5842041f4e65fad6a7708876 --spotId 5842041f4e65fad6a7708815 --week',
         );
         console.log(
-          '  With calendar:   ./surfcal --spotId 5842041f4e65fad6a7708876 --calendar benjamin.groehbiel@gmail.com --today',
+          '  With calendar:   ./surfcal --spotId 5842041f4e65fad6a7708876 --calendar my@email.com --today',
         );
         console.log(
           '  Custom criteria: ./surfcal --spotId 5842041f4e65fad6a7708876 --wave-min 3 --rating-min FAIR --today',
