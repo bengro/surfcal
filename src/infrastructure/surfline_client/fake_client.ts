@@ -10,6 +10,7 @@ import {
   Wind,
   WindResponse,
   SpotResponse,
+  SpotSearchResponse,
 } from './types';
 import { SurflineClient } from './surfline_client';
 
@@ -299,5 +300,69 @@ export class SurflineFakeClient implements SurflineClient {
         coordinates: [-118.6919, 34.0259], // Malibu coordinates as default
       },
     };
+  }
+
+  public async searchSpots(query: string): Promise<SpotSearchResponse> {
+    this.checkLogin();
+
+    if (!query || query.trim().length === 0) {
+      throw new Error('Search query cannot be empty.');
+    }
+
+    // Fake spot database for testing
+    const fakeSpots = [
+      {
+        _id: '5842041f4e65fad6a7708876',
+        name: 'Malibu',
+        location: { coordinates: [-118.6919, 34.0259] as [number, number] },
+        region: 'Los Angeles',
+        country: 'USA',
+      },
+      {
+        _id: '5842041f4e65fad6a7708815',
+        name: 'Pipeline',
+        location: { coordinates: [-158.0567, 21.6611] as [number, number] },
+        region: 'North Shore',
+        country: 'USA',
+      },
+      {
+        _id: '5842041f4e65fad6a770883d',
+        name: 'Bells Beach',
+        location: { coordinates: [144.2844, -38.3667] as [number, number] },
+        region: 'Victoria',
+        country: 'Australia',
+      },
+      {
+        _id: '5842041f4e65fad6a7708962',
+        name: 'Jeffreys Bay',
+        location: { coordinates: [24.9167, -34.0333] as [number, number] },
+        region: 'Eastern Cape',
+        country: 'South Africa',
+      },
+      {
+        _id: '584204214e65fad6a7709cef',
+        name: 'Great Western',
+        location: { coordinates: [-5.079, 50.418] as [number, number] },
+        region: 'Cornwall',
+        country: 'United Kingdom',
+      },
+      {
+        _id: '5842041f4e65fad6a7708901',
+        name: 'Fistral Beach',
+        location: { coordinates: [-5.0838, 50.4167] as [number, number] },
+        region: 'Cornwall',
+        country: 'United Kingdom',
+      },
+    ];
+
+    // Simple search logic - match by name, region, or country (case insensitive)
+    const searchTerm = query.trim().toLowerCase();
+    const matchingSpots = fakeSpots.filter(spot => 
+      spot.name.toLowerCase().includes(searchTerm) ||
+      spot.region?.toLowerCase().includes(searchTerm) ||
+      spot.country?.toLowerCase().includes(searchTerm)
+    );
+
+    return { spots: matchingSpots };
   }
 }

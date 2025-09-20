@@ -6,6 +6,7 @@ import {
   SurfResponse,
   WindResponse,
   SpotResponse,
+  SpotSearchResponse,
 } from './types';
 
 export interface SurflineClient {
@@ -33,4 +34,5 @@ export interface SurflineClient {
     intervalHours: number,
   ): Promise<WindResponse>;
   getSpotInfo(spotId: string): Promise<SpotResponse>;
+  searchSpots(query: string): Promise<SpotSearchResponse>;
 }

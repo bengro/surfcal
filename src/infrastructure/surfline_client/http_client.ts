@@ -7,6 +7,7 @@ import {
   SurfResponse,
   WindResponse,
   SpotResponse,
+  SpotSearchResponse,
 } from './types';
 import { SurflineClient } from './surfline_client';
 
@@ -333,6 +334,73 @@ export class SurflineHttpClient implements SurflineClient {
         console.error('An unknown error occurred while fetching spot info.');
       }
       throw new Error('Failed to fetch spot information.');
+    }
+  }
+
+  public async searchSpots(query: string): Promise<SpotSearchResponse> {
+    if (!this.accessToken) {
+      throw new Error('You must be logged in to search spots.');
+    }
+
+    if (!query || query.trim().length === 0) {
+      throw new Error('Search query cannot be empty.');
+    }
+
+    try {
+      const response = await this.httpClient.get<any>('/kbyg/search/site', {
+        params: {
+          q: query.trim(),
+          querySize: 10,
+          suggestionSize: 10,
+        },
+      });
+
+      // Handle the Surfline search API response structure
+      // The API returns an array of search results, we need the first one which contains spots
+      if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+        const spotSearchResult = response.data[0]; // First result contains spots
+        
+        if (spotSearchResult.hits && spotSearchResult.hits.hits) {
+          const spots = spotSearchResult.hits.hits
+            .map((hit: any) => {
+              const source = hit._source;
+              
+              // Extract region and country from breadCrumbs
+              const breadCrumbs = source.breadCrumbs || [];
+              const country = breadCrumbs.length > 0 ? breadCrumbs[0] : undefined;
+              const region = breadCrumbs.length > 2 ? breadCrumbs[2] : 
+                           breadCrumbs.length > 1 ? breadCrumbs[1] : undefined;
+              
+              return {
+                _id: hit._id,
+                name: source.name || 'Unknown Spot',
+                location: {
+                  coordinates: [source.location?.lon || 0, source.location?.lat || 0] as [number, number],
+                },
+                region: region,
+                country: country,
+              };
+            });
+
+          return { spots };
+        }
+      }
+
+      // Return empty results if no hits found
+      return { spots: [] };
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError;
+        console.error(
+          'Error searching spots:',
+          axiosError.response ? axiosError.response.data : axiosError.message,
+        );
+      } else if (error instanceof Error) {
+        console.error('Error searching spots:', error.message);
+      } else {
+        console.error('An unknown error occurred while searching spots.');
+      }
+      throw new Error('Failed to search spots.');
     }
   }
 }

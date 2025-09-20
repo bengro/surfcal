@@ -202,3 +202,17 @@ export interface SpotResponse {
     coordinates: [number, number];
   };
 }
+
+export interface SpotSearchResult {
+  _id: string;
+  name: string;
+  location: {
+    coordinates: [number, number];
+  };
+  region?: string;
+  country?: string;
+}
+
+export interface SpotSearchResponse {
+  spots: SpotSearchResult[];
+}

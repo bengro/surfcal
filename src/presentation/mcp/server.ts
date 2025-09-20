@@ -203,6 +203,21 @@ class SurfcalMCPServer {
               required: ['spotId', 'date'],
             },
           },
+          {
+            name: 'search_spots',
+            description: 'Search for surf spots by name, region, or location to get their spot IDs',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                query: {
+                  type: 'string',
+                  description: 'Search query for surf spot name, region, or location (e.g., "Great Western", "Cornwall", "Malibu")',
+                  minLength: 1,
+                },
+              },
+              required: ['query'],
+            },
+          },
         ],
       };
     });
@@ -242,6 +257,9 @@ class SurfcalMCPServer {
               args?.waveMin as number,
               args?.ratingMin as SurfCriteria['minRating'],
             );
+
+          case 'search_spots':
+            return await this.searchSpots(args?.query as string);
 
           default:
             throw new McpError(
@@ -353,6 +371,7 @@ Available Tools:
 - get_surfable_hours_tomorrow: Get tomorrow's surfable conditions  
 - get_surfable_hours_week: Get next 7 days of surfable conditions
 - get_surfable_hours_date: Get conditions for a specific date
+- search_spots: Search for surf spots by name, region, or location to get spot IDs
 
 All tools require a spotId parameter (Surfline spot ID) and optionally accept:
 - waveMin: Minimum wave height in feet (default: 2)
@@ -541,6 +560,60 @@ Environment variables required:
         },
       ],
     };
+  }
+
+  private async searchSpots(query: string) {
+    if (!query) {
+      throw new McpError(ErrorCode.InvalidParams, 'query is required');
+    }
+
+    try {
+      const searchResults = await this.surflineClient!.searchSpots(query);
+
+      if (searchResults.spots.length === 0) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `🔍 No surf spots found matching "${query}". Try searching with different terms like spot name, region, or country.`,
+            },
+          ],
+        };
+      }
+
+      const formattedResults = searchResults.spots.map(spot => ({
+        spotId: spot._id,
+        name: spot.name,
+        region: spot.region,
+        country: spot.country,
+        coordinates: spot.location.coordinates,
+      }));
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(
+              {
+                query,
+                results: formattedResults,
+                count: searchResults.spots.length,
+              },
+              null,
+              2,
+            ),
+          },
+        ],
+      };
+    } catch (error) {
+      if (error instanceof McpError) {
+        throw error;
+      }
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Error searching spots: ${error}`,
+      );
+    }
   }
 
   private async formatSurfableHoursResponse(
