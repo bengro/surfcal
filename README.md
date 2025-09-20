@@ -216,7 +216,84 @@ Surfcal also provides an MCP (Model Context Protocol) server for AI-powered surf
    npm run test:mcp
    ```
 
-#### MCP Integration (not verified yet)
+#### MCP Integration with Claude Desktop
+
+To use Surfcal with Claude Desktop, you need to configure the MCP server in Claude's settings:
+
+1. **Build the project first:**
+   ```bash
+   npm run build
+   ```
+
+2. **Locate Claude Desktop's configuration file:**
+   - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+   - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+3. **Add Surfcal MCP server to the configuration:**
+   ```json
+   {
+     "mcpServers": {
+       "surfcal": {
+         "command": "node",
+         "args": ["/absolute/path/to/your/surfcal/dist/presentation/mcp/server.js"],
+         "env": {
+           "SURFLINE_EMAIL": "your_surfline_email@example.com",
+           "SURFLINE_PASSWORD": "your_surfline_password",
+           "GOOGLE_CALENDAR_API_KEY": "your_google_calendar_api_key"
+         }
+       }
+     }
+   }
+   ```
+
+4. **Replace the path with your actual project path:**
+   - Get your absolute path by running `pwd` in your surfcal directory
+   - Update the `args` array with the full path to `dist/presentation/mcp/server.js`
+
+5. **Set up environment variables:**
+   - Add your Surfline credentials to the `env` section
+   - Optionally add your Google Calendar API key for calendar integration
+
+6. **Restart Claude Desktop** to load the new configuration
+
+7. **Test the integration:**
+   - Open Claude Desktop
+   - Try asking: "What are the surfable hours at Malibu today?"
+   - Or: "Search for surf spots in California"
+   - Or: "What's the spot ID for Pipeline in Hawaii?"
+
+#### Available MCP Tools
+
+Once configured, Claude will have access to these surfcal tools:
+
+- **`get_surfable_hours_today`** - Get today's surfable hours for specific spots
+- **`get_surfable_hours_tomorrow`** - Get tomorrow's surfable hours
+- **`get_surfable_hours_week`** - Get the next 7 days of surfable hours
+- **`get_surfable_hours_date`** - Get surfable hours for a specific date
+- **`search_spots`** - Search for surf spots by name, region, or country
+
+#### MCP Resources
+
+Claude also has access to these resources:
+
+- **Popular surf spots** with their IDs for easy reference
+- **Server information** and capabilities
+
+#### Example Claude Conversations
+
+Once configured, you can have natural conversations with Claude like:
+
+- *"What's the best surf spot in California for tomorrow morning?"*
+- *"Find me surfable hours at Pipeline this week with at least 4ft waves"*
+- *"Search for surf spots near Newquay and check conditions"*
+- *"Compare surf conditions at Malibu and Pipeline for the weekend"*
+
+#### Troubleshooting
+
+- **Server not found**: Ensure the path in `claude_desktop_config.json` is absolute and correct
+- **Authentication errors**: Verify your Surfline credentials in the `env` section
+- **Permission issues**: Make sure the `dist/presentation/mcp/server.js` file is executable
+- **Build issues**: Run `npm run build` to ensure the server is compiled
 
 #### 🤖 AI Agent Vision: The Future of Intelligent Surf Planning
 
